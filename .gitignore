@@ -42,3 +42,8 @@ next-env.d.ts
 *.swo
 .DS_Store
 Thumbs.db
+
+# foundry
+/contracts/out/
+/contracts/cache/
+/contracts/lib/
