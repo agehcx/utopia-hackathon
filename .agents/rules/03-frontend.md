@@ -6,6 +6,7 @@ These rules apply when developing, refactoring, or testing code in `src/` or fro
 
 ## 1. Next.js 16 & React 19 Standards
 - **App Router**: Code resides in `src/app/` using App Router conventions.
+- **Route Separation**: Public landing page resides at `/` (`src/app/page.js`); the full interactive management console resides at `/app` (`src/app/app/page.js`).
 - **Client Components**: Interactive dashboard views and context providers MUST declare `'use client';` at the top of the file.
 - **Breaking Changes in Next.js 16**:
   - Always verify documentation in `node_modules/next/dist/docs/` when unsure of APIs.

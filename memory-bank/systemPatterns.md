@@ -131,7 +131,9 @@ When an agent proposes an amount exceeding limits for an allowlisted address:
 
 ```mermaid
 flowchart LR
-    subgraph UI["Next.js App Shell (src/app/page.js)"]
+    Landing["Landing Page (src/app/page.js) at /"] --> App["Console App (src/app/app/page.js) at /app"]
+
+    subgraph UI["Management Console (/app)"]
         Header["Header.jsx (Tab Bar)"]
         Toasts["Toast.jsx (Toasts)"]
         

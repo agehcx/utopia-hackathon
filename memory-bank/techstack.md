@@ -17,6 +17,7 @@ This document outlines the complete architectural stack, programming languages, 
 - `contracts/src/BoundedVault.sol`: The core multi-asset guardian vault contract. Manages deposits, withdrawals, versioned policies, allowlists, limits per token, agent proposal evaluation, automated circuit breakers, request staging, and audit event emissions.
 - `contracts/src/MockUSDC.sol`: ERC-20 test token with standard 6 decimals (`1e6`) used for integration and fuzz testing.
 - `contracts/test/BoundedVault.t.sol`: 23 comprehensive unit tests verifying AVAX & ERC20 transfers, breaker triggers, UTC daily bucket rollovers, fresh vault defaults, and owner sovereignty.
+- `contracts/script/Deploy.s.sol`: Automated deployment script for Avalanche Fuji testnet (`43113`) and local Anvil (`31337`), auto-generating `src/config/deployments.json`.
 - `contracts/test/BoundedVault.invariant.t.sol`: 5 stateful invariant fuzzing suites executing 128,000 calls each across randomized owner/agent/time scenarios.
 
 ### Core Contract Design Patterns
@@ -37,14 +38,15 @@ This document outlines the complete architectural stack, programming languages, 
 
 | Technology | Version | Purpose |
 | :--- | :--- | :--- |
-| **Next.js** | `16.4.1` | React framework using App Router (`src/app/layout.js`, `src/app/page.js`). |
+| **Next.js** | `16.4.1` | React framework using App Router (`src/app/page.js`, `src/app/app/page.js`). |
 | **React** | `19.3.0` | UI rendering engine supporting client-side interactivity (`'use client'`). |
 | **Tailwind CSS** | `^3.4.19` | Utility-first styling framework combined with dark theme CSS variables. |
 | **PostCSS & Autoprefixer** | `^8.5.30` / `^10.6.1` | CSS transformations and vendor prefixing. |
 | **ESLint** | `^9.x` | Code quality and linting with Flat Config (`eslint.config.mjs`) and `eslint-config-next`. |
 
 ### UI & Component Layout
-- **App Shell (`src/app/page.js`)**: Single-page responsive layout with tabbed navigation (`Overview`, `Rules`, `Agent`, `Receipts`).
+- **Public Landing Page (`src/app/page.js`)**: Conversion-oriented landing page at `/` with hero, interactive preview teaser, and direct launch link.
+- **Console App Shell (`src/app/app/page.js`)**: Full management dashboard at `/app` with tabbed navigation (`Overview`, `Rules`, `Agent`, `Receipts`).
 - **State Store (`src/store/useVaultStore.jsx`)**: Centralized React Context provider implementing single-write commit path, toast pipeline, and instruction runner.
 - **Pure State Machine & Utilities (`src/lib/`)**:
   - `src/lib/vault.js`: Pure functional state machine mirroring `BoundedVault.sol` state transitions (`propose`, `tripBreaker`, `approve`, `reject`, `freeze`, `unfreeze`) for offline demonstration.

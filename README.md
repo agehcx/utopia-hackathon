@@ -5,7 +5,7 @@
 
 [![Solidity](https://img.shields.io/badge/Solidity-0.8.24-363636?logo=solidity)](https://soliditylang.org/)
 [![Foundry](https://img.shields.io/badge/Foundry-28%20Passing%20(5%20Invariants)-black?logo=ethereum)](https://getfoundry.sh/)
-[![Network](https://img.shields.io/badge/Asset-AVAX%20%7C%20ERC--20-E84142?logo=avalanche)](https://avax.network/)
+[![Network](https://img.shields.io/badge/Network-Avalanche%20Fuji%20%7C%20C--Chain-E84142?logo=avalanche)](https://avax.network/)
 [![Next.js](https://img.shields.io/badge/Next.js-16.4.1-black?logo=next.js)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19.3.0-blue?logo=react)](https://react.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4.19-38bdf8?logo=tailwind-css)](https://tailwindcss.com/)
@@ -86,16 +86,28 @@ As autonomous AI agents are entrusted with capital for decentralized operations�
 ├── contracts/                        # Smart contract suite (Foundry)
 │   ├── src/
 │   │   ├── BoundedVault.sol          # Multi-token guardian vault with circuit breaker
-│   │   └── MockUSDC.sol              # Test ERC20 token (6 decimals)
+│   │   └── MockUSDC.sol              # Test ERC-20 token (6 decimals)
+│   ├── script/
+│   │   └── Deploy.s.sol              # Avalanche Fuji / local deployment script
 │   ├── test/
 │   │   ├── BoundedVault.t.sol        # 23 unit & boundary test suites
 │   │   └── BoundedVault.invariant.t.sol # 5 stateful invariant fuzz tests (128k calls)
 │   └── foundry.toml                  # Foundry config (Solidity 0.8.24, Paris EVM)
 ├── src/                              # Next.js 16 frontend application
-│   ├── app/                          # App Router layout & entry page
-│   ├── components/                   # Reusable UI components & layouts
-│   ├── views/                        # Dashboard views (Policy, Agent Console, Audit Log)
-│   └── store/useVaultStore.jsx       # Centralized client state & simulation engine
+│   ├── app/
+│   │   ├── page.js                   # Landing page (hero, value prop, demo teaser)
+│   │   └── app/page.js               # Full vault dashboard console (/app)
+│   ├── components/                   # UI primitives, Header tab bar, Toast notifications
+│   ├── lib/
+│   │   ├── vault.js                  # Pure state machine mirroring BoundedVault
+│   │   ├── rules.js                  # Policy evaluation engine & reason codes
+│   │   └── mockAgent.js              # Natural language prompt interpreter
+│   ├── views/                        # Dashboard views
+│   │   ├── OverviewPage.jsx          # Balance, daily progress gauge, pending requests
+│   │   ├── RulesPage.jsx             # Limits, circuit breaker, allowlist, freeze toggles
+│   │   ├── AgentPage.jsx             # Chat console, proposal previews, attack demo
+│   │   └── ReceiptsPage.jsx          # Comprehensive audit ledger & filterable receipts
+│   └── store/useVaultStore.jsx       # Single-write commit store & instruction runner
 ├── memory-bank/                      # Architectural memory bank
 │   ├── project_brief.md              # Mission, problem statement, goals
 │   ├── techstack.md                  # Technology stack, versions, design patterns
@@ -107,6 +119,7 @@ As autonomous AI agents are entrusted with capital for decentralized operations�
 │   ├── 02-contracts.md               # Solidity, CEI, non-reverting logging rules
 │   ├── 03-frontend.md                # Next.js 16 & React 19 hook purity rules
 │   └── 04-security.md                # Zero-trust, key safety, human-in-the-loop
+├── .env.example                      # Environment template for testnet deployment
 └── AGENTS.md                         # Agent guidelines & Next.js instruction block
 ```
 
@@ -118,7 +131,7 @@ As autonomous AI agents are entrusted with capital for decentralized operations�
 - [Node.js](https://nodejs.org/) (v18.18+ or v20+)
 - [Foundry](https://getfoundry.sh/) (`forge`, `cast`, `anvil`)
 
-### 1. Smart Contracts
+### 1. Smart Contracts & Testing
 
 ```bash
 # Navigate to contracts directory
@@ -173,21 +186,35 @@ Suite result: ok. 5 passed; 0 failed; 0 skipped
 Total: 28 tests passed, 0 failed, 0 skipped
 ```
 
-### 2. Frontend Dashboard
+### 2. Deploying to Avalanche Fuji Testnet
 
 ```bash
-# Install dependencies from root
+# Copy and configure environment variables
+cp .env.example .env
+# Set PRIVATE_KEY, AGENT_ADDRESS, and AVALANCHE_FUJI_RPC
+
+# Run deployment script (automatically exports to src/config/deployments.json)
+cd contracts
+forge script script/Deploy.s.sol --rpc-url fuji --broadcast
+```
+
+### 3. Frontend Web Application
+
+```bash
+# Install dependencies from project root
 npm install
 
 # Start development server
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-- **Policy Dashboard**: Inspect and configure per-tx caps, daily budgets, allowlist entries, and emergency freeze controls.
-- **Agent Console**: Chat interface simulating agent intent parsing, classification (`AUTO`, `NEEDS_APPROVAL`, `BLOCKED`), and action card execution.
-- **Audit Log**: Timeline and table view indexing historical proposals, executions, blocks, and policy adjustments with multi-factor filtering.
+Open [http://localhost:3000](http://localhost:3000) in your browser:
+- **Landing Page (`/`)**: Product showcase, architecture overview, interactive demo teaser, and direct launch button.
+- **Console App (`/app`)**:
+  - **Overview**: Live vault balance, daily spending progress gauge, pending approval cards, and recent receipts.
+  - **Rules**: Policy controls (per-tx cap, daily limit, circuit breaker threshold & window, expiry), labeled recipient allowlist manager, and emergency controls (freeze, unfreeze, revoke).
+  - **Agent Console**: Interactive chat interface, natural language intent interpreter, live proposal previews (`AUTO`, `ASK`, `BLOCKED`), and one-click adversarial attack demonstration ("Demonstrate prompt injection attempt").
+  - **Receipts Ledger**: Comprehensive audit ledger indexing all events (`PAID`, `PENDING`, `BLOCKED`) with status filtering, address search, tx hashes, and reason explanations.
 
 ---
 
