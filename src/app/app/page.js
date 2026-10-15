@@ -16,8 +16,8 @@ export default function AppPage() {
   const Page = PAGES[tab];
   return (
     <VaultProvider>
-      <div className="mx-auto max-w-[1280px] p-3 pb-28 sm:p-6 md:pb-6">
-        <div className="rounded-[2rem] bg-paper p-5 shadow-[0_30px_60px_-40px_rgba(0,0,0,.35)] sm:p-8">
+      <div className="w-full p-2 pb-28 sm:p-4 md:pb-4">
+        <div className="min-h-[calc(100vh-2rem)] rounded-[2rem] bg-paper p-5 shadow-[0_30px_60px_-40px_rgba(0,0,0,.35)] sm:p-8 lg:px-12">
           <Header tab={tab} setTab={setTab} />
           <main className="mt-8">
             <Page go={setTab} />
