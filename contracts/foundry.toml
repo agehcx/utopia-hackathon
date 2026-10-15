@@ -9,3 +9,7 @@ evm_version = "paris"
 optimizer = true
 optimizer_runs = 200
 remappings = ["@openzeppelin/=lib/openzeppelin-contracts/"]
+fs_permissions = [{ access = "read-write", path = "../src/config" }]
+
+[rpc_endpoints]
+fuji = "https://api.avax-test.network/ext/bc/C/rpc"

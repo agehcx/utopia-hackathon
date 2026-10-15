@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useVault } from '../store/useVaultStore';
 import { shortAddr } from '../lib/rules';
 import { Logo, Pill } from './ui';
@@ -17,7 +18,7 @@ export default function Header({ tab, setTab }) {
   return (
     <>
       <header className="flex flex-wrap items-center justify-between gap-4">
-        <Logo />
+        <Link href="/" aria-label="Bounded home"><Logo /></Link>
         <nav className="hidden gap-1 md:flex" aria-label="Primary">
           {TABS.map((t) => (
             <button
