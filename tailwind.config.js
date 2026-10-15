@@ -1,25 +1,21 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: [
-    "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
-  ],
+  content: ["./src/**/*.{js,jsx,mdx}"],
   theme: {
     extend: {
       colors: {
-        zinc: {
-          950: '#09090b',
-          900: '#18181b',
-          800: '#27272a',
-          700: '#3f3f46',
-          600: '#52525b',
-          500: '#71717a',
-          400: '#a1a1aa',
-          300: '#d4d4d8',
-          200: '#e4e4e7',
-          100: '#f4f4f5',
-        },
+        ink: '#0A0A0A',
+        canvas: '#E9E9E7',
+        paper: '#F6F6F4',
+        mute: '#8A8A86',
+        line: '#EDEDED',
+        brand: { DEFAULT: '#FF6A1A', soft: '#FFE9DC', deep: '#C24400' },
+        good: { DEFAULT: '#1F9D55', soft: '#E4F5EA' },
+        bad: { DEFAULT: '#E5484D', soft: '#FDE8E9' },
+      },
+      fontFamily: {
+        sans: ['var(--font-outfit)', 'system-ui', 'sans-serif'],
+        mono: ['var(--font-geist-mono)', 'ui-monospace', 'monospace'],
       },
     },
   },

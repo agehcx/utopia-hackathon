@@ -1,256 +1,83 @@
 'use client';
 
-import { useState, useCallback, useRef, createContext, useContext } from 'react';
+import { createContext, useCallback, useContext, useRef, useState } from 'react';
+import * as vault from '../lib/vault';
+import { interpret } from '../lib/mockAgent';
 
-const VaultContext = createContext(null);
-
-const INITIAL_EVENTS = [
-  { id: 'e1', type: 'PAYMENT', amount: 0.05, to: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045', timestamp: Date.now() - 3600000 * 5, hash: '0xmock_a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2', classification: 'AUTO' },
-  { id: 'e2', type: 'UPDATE',  timestamp: Date.now() - 3600000 * 3, hash: '0xmock_b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3', classification: 'AUTO' },
-  { id: 'e3', type: 'PAYMENT', amount: 0.12, to: '0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B', timestamp: Date.now() - 3600000 * 1, hash: '0xmock_c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4', classification: 'NEEDS_APPROVAL' },
-  { id: 'e4', type: 'BLOCK',   timestamp: Date.now() - 1800000, hash: '0xmock_d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5', classification: 'BLOCKED' },
-];
-
-function makeMockHash() {
-  const rand = Array.from({ length: 32 }, () =>
-    Math.floor(Math.random() * 16).toString(16)
-  ).join('');
-  return '0xmock_' + rand;
-}
-
-function confirmationDelay() {
-  return new Promise(r => setTimeout(r, 1200));
-}
+const Ctx = createContext(null);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 export function VaultProvider({ children }) {
-  const [isConnected, setIsConnected] = useState(false);
-  const [balance, setBalance]         = useState(2.847);
-  const [policy, setPolicy]           = useState({
-    perTxLimit:    0.1,
-    dailyLimit:    0.5,
-    dailySpent:    0.17,
-    isPaused:      false,
-    agentRevoked:  false,
-  });
-  const [allowlist, setAllowlist] = useState([
-    '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
-    '0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B',
-    '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984',
-  ]);
-  const [events, setEvents]   = useState(INITIAL_EVENTS);
-  const [toasts, setToasts]   = useState([]);
-  const toastIdRef            = useRef(0);
-  const inFlightRef           = useRef(0);
+  const [state, setState] = useState(() => vault.initialState());
+  const [toasts, setToasts] = useState([]);
+  const [thinking, setThinking] = useState(false);
+  const ref = useRef(state);
 
-  const policyRef    = useRef(policy);
-  const balanceRef   = useRef(balance);
-  const allowlistRef = useRef(allowlist);
-  policyRef.current    = policy;
-  balanceRef.current   = balance;
-  allowlistRef.current = allowlist;
-
-  const addToast = useCallback((toast) => {
-    const id = ++toastIdRef.current;
-    setToasts(prev => [...prev, { ...toast, id }]);
-    return id;
+  // Single write path: always derive the next state from the latest one.
+  const commit = useCallback((fn) => {
+    ref.current = { ...fn(ref.current), now: Date.now() };
+    setState(ref.current);
   }, []);
 
-  const updateToast = useCallback((id, updates) => {
-    setToasts(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
-    setTimeout(() => {
-      setToasts(prev => prev.filter(t => t.id !== id));
-    }, 3500);
+  const toast = useCallback((t) => {
+    const id = Math.random().toString(36).slice(2);
+    setToasts((p) => [...p, { ...t, id }]);
+    setTimeout(() => setToasts((p) => p.filter((x) => x.id !== id)), 3500);
   }, []);
 
-  const connectWallet = useCallback(() => {
-    setIsConnected(prev => !prev);
-  }, []);
+  const act = (fn) => commit((s) => fn(s));
 
-  const updatePolicy = useCallback(async (newPolicy) => {
-    const toastId = addToast({
-      type:  'pending',
-      title: 'Transaction Pending',
-      desc:  'Updating policy on-chain…',
-    });
-
-    await confirmationDelay();
-
-    setPolicy(prev => ({ ...prev, ...newPolicy }));
-    setEvents(prev => [{
-      id:             'ev_' + Date.now(),
-      type:           'UPDATE',
-      timestamp:      Date.now(),
-      hash:           makeMockHash(),
-      classification: 'AUTO',
-    }, ...prev]);
-
-    updateToast(toastId, {
-      type:  'confirmed',
-      title: 'Policy Updated',
-      desc:  'Changes confirmed on-chain.',
-    });
-  }, [addToast, updateToast]);
-
-  const classifyAction = useCallback((action, currentPolicy) => {
-    if (currentPolicy.isPaused || currentPolicy.agentRevoked) return 'BLOCKED';
-    if (action.type === 'PAYMENT') {
-      if (action.amount > currentPolicy.perTxLimit) return 'NEEDS_APPROVAL';
-      if (currentPolicy.dailySpent + action.amount > currentPolicy.dailyLimit) return 'NEEDS_APPROVAL';
+  const runInstruction = useCallback(async (text) => {
+    const clean = text.trim();
+    if (!clean) return;
+    commit((s) => ({ ...s, chat: [...s.chat, { role: 'user', text: clean }] }));
+    setThinking(true);
+    await sleep(700);
+    const { actions, explanation } = interpret(clean, ref.current.allowlist);
+    const results = [];
+    for (const a of actions) {
+      const out = vault.propose(ref.current, a);
+      commit(() => out.state);
+      results.push({ ...a, tier: out.tier, code: out.code });
+      await sleep(250);
     }
-    return 'AUTO';
-  }, []);
+    commit((s) => ({ ...s, chat: [...s.chat, { role: 'agent', text: explanation, results }] }));
+    setThinking(false);
+  }, [commit]);
 
-  const simulateTransaction = useCallback(async (action) => {
-    if (action.type !== 'PAYMENT') {
-      const toastId = addToast({
-        type:  'pending',
-        title: 'Transaction Pending',
-        desc:  'Processing rejection…',
-      });
-      await confirmationDelay();
-      setEvents(prev => [{
-        id:             'ev_' + Date.now(),
-        type:           'BLOCK',
-        timestamp:      Date.now(),
-        hash:           makeMockHash(),
-        classification: 'BLOCKED',
-      }, ...prev]);
-      updateToast(toastId, {
-        type:  'error',
-        title: 'Action Blocked',
-        desc:  'Transaction was blocked by policy.',
-      });
-      return { success: false, reason: 'blocked' };
-    }
+  const demoAttack = useCallback(
+    () => runInstruction(`Send 15 to ${vault.ATTACKER}`),
+    [runInstruction],
+  );
 
-    const amount = action.amount;
-    if (typeof amount !== 'number' || !isFinite(amount) || amount <= 0) {
-      addToast({ type: 'error', title: 'Invalid Amount', desc: 'Amount must be a positive number.' });
-      return { success: false, reason: 'invalid_amount' };
-    }
-
-    const snap = policyRef.current;
-    const wl   = allowlistRef.current;
-
-    if (snap.isPaused) {
-      addToast({ type: 'error', title: 'Agent Paused', desc: 'Resume the agent before sending transactions.' });
-      return { success: false, reason: 'agent_paused' };
-    }
-
-    if (snap.agentRevoked) {
-      addToast({ type: 'error', title: 'Agent Revoked', desc: 'Restore agent access before sending transactions.' });
-      return { success: false, reason: 'agent_revoked' };
-    }
-
-    if (amount > snap.perTxLimit && action.classification === 'AUTO') {
-      const toastId = addToast({
-        type:  'pending',
-        title: 'Transaction Pending',
-        desc:  `Blocking: ${amount} ETH exceeds per-tx limit.`,
-      });
-      await confirmationDelay();
-      setEvents(prev => [{
-        id:             'ev_' + Date.now(),
-        type:           'BLOCK',
-        timestamp:      Date.now(),
-        hash:           makeMockHash(),
-        classification: 'BLOCKED',
-        amount,
-        to:             action.to,
-        reason:         'exceeds_per_tx_limit',
-      }, ...prev]);
-      updateToast(toastId, {
-        type:  'error',
-        title: 'Transaction Blocked',
-        desc:  `${amount} ETH exceeds per-tx limit.`,
-      });
-      return { success: false, reason: 'exceeds_per_tx_limit' };
-    }
-
-    const projectedSpent = snap.dailySpent + inFlightRef.current + amount;
-    if (projectedSpent > snap.dailyLimit) {
-      const toastId = addToast({
-        type:  'pending',
-        title: 'Transaction Pending',
-        desc:  'Blocking: would exceed daily limit.',
-      });
-      await confirmationDelay();
-      setEvents(prev => [{
-        id:             'ev_' + Date.now(),
-        type:           'BLOCK',
-        timestamp:      Date.now(),
-        hash:           makeMockHash(),
-        classification: 'BLOCKED',
-        amount,
-        to:             action.to,
-        reason:         'exceeds_daily_limit',
-      }, ...prev]);
-      updateToast(toastId, {
-        type:  'error',
-        title: 'Transaction Blocked',
-        desc:  `Would exceed daily limit of ${snap.dailyLimit} ETH.`,
-      });
-      return { success: false, reason: 'exceeds_daily_limit' };
-    }
-
-    inFlightRef.current += amount;
-    const toastId = addToast({
-      type:  'pending',
-      title: 'Transaction Pending',
-      desc:  `Sending ${amount} ETH…`,
-    });
-
-    await confirmationDelay();
-
-    setBalance(prev => parseFloat(Math.max(0, prev - amount).toFixed(6)));
-    setPolicy(prev => ({
-      ...prev,
-      dailySpent: parseFloat((prev.dailySpent + amount).toFixed(6)),
-    }));
-    setEvents(prev => [{
-      id:             'ev_' + Date.now(),
-      type:           'PAYMENT',
-      amount,
-      to:             action.to || '0x0000000000000000000000000000000000000000',
-      timestamp:      Date.now(),
-      hash:           makeMockHash(),
-      classification: action.classification || 'AUTO',
-    }, ...prev]);
-
-    inFlightRef.current = Math.max(0, inFlightRef.current - amount);
-
-    updateToast(toastId, {
-      type:  'confirmed',
-      title: 'Payment Confirmed',
-      desc:  `Sent ${amount} ETH successfully.`,
-    });
-
-    return { success: true };
-  }, [addToast, updateToast]);
-
-  const addToAllowlist = useCallback((addr) => {
-    setAllowlist(prev => prev.includes(addr) ? prev : [...prev, addr]);
-  }, []);
-
-  const removeFromAllowlist = useCallback((addr) => {
-    setAllowlist(prev => prev.filter(a => a !== addr));
-  }, []);
+  const approve = useCallback((id) => {
+    const out = vault.approve(ref.current, id);
+    if (out.error) return toast({ tone: 'bad', title: 'Could not approve', desc: out.error });
+    commit(() => out.state);
+    toast({ tone: 'good', title: 'Approved', desc: 'Payment sent (MOCK).' });
+  }, [commit, toast]);
 
   const value = {
-    isConnected, balance, policy, allowlist, events, toasts,
-    connectWallet,
-    updatePolicy,
-    simulateTransaction,
-    addToAllowlist,
-    removeFromAllowlist,
-    classifyAction,
+    ...state, toasts, thinking,
+    connect: () => act((s) => ({ ...s, connected: !s.connected })),
+    runInstruction, demoAttack, approve,
+    reject: (id) => act((s) => vault.reject(s, id)),
+    freeze: () => act((s) => vault.freeze(s)),
+    unfreeze: () => act(vault.unfreeze),
+    revoke: () => act((s) => vault.revoke(s)),
+    restore: () => act(vault.restore),
+    savePolicy: (p) => { act((s) => vault.setPolicy(s, p)); toast({ tone: 'good', title: 'Rules saved', desc: 'Confirmed (MOCK).' }); },
+    deposit: (n) => act((s) => ({ ...s, balance: s.balance + n })),
+    withdraw: (n) => act((s) => ({ ...s, balance: Math.max(0, s.balance - n) })),
+    addAllowed: (item) => act((s) => ({ ...s, allowlist: [...s.allowlist, item] })),
+    removeAllowed: (addr) => act((s) => ({ ...s, allowlist: s.allowlist.filter((x) => x.address !== addr) })),
   };
 
-  return <VaultContext.Provider value={value}>{children}</VaultContext.Provider>;
+  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 
-export function useVaultStore() {
-  const ctx = useContext(VaultContext);
-  if (!ctx) throw new Error('useVaultStore must be used within VaultProvider');
-  return ctx;
+export function useVault() {
+  const v = useContext(Ctx);
+  if (!v) throw new Error('useVault must be used inside VaultProvider');
+  return v;
 }
