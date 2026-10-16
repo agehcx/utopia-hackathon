@@ -1,164 +1,173 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useVault } from '../store/useVaultStore';
-import { shortAddr } from '../lib/rules';
-import { Card, Empty, Pill } from '../components/ui';
+import { DAY, UNIT, diffPolicy, fmt } from '../lib/engine';
+import { simTime } from '../lib/receipts';
+import { Card, Empty, Simulated } from '../components/ui';
 
-const HOUR = 3_600_000;
-const ADDR = /^0x[0-9a-fA-F]{40}$/;
+const ADDRESS = /^0x[0-9a-fA-F]{40}$/;
 
-function Slider({ label, value, onChange, min, max, step = 1, unit }) {
+// Sliders in display units; `get`/`set` convert to engine units.
+const FIELDS = [
+  { key: 'perTx', label: 'Per payment', unit: 'tUSDC', min: 1, max: 200, get: (p) => p.perTx / UNIT, set: (v) => ({ perTx: v * UNIT }) },
+  { key: 'daily', label: 'Per day', unit: 'tUSDC', min: 10, max: 1000, step: 10, get: (p) => p.daily / UNIT, set: (v) => ({ daily: v * UNIT }) },
+  { key: 'maxVaultPct', label: 'Max % of vault per action', unit: '%', min: 1, max: 100, get: (p) => p.maxVaultPct, set: (v) => ({ maxVaultPct: v }) },
+  { key: 'breakerThreshold', label: 'Freeze after N blocks', unit: 'blocks', min: 1, max: 10, get: (p) => p.breakerThreshold, set: (v) => ({ breakerThreshold: v }) },
+  { key: 'breakerWindowSec', label: 'Block window', unit: 'sim. min', min: 1, max: 60, get: (p) => p.breakerWindowSec / 60, set: (v) => ({ breakerWindowSec: v * 60 }) },
+  { key: 'maxFeeBps', label: 'Max Bounded fee', unit: 'bps', min: 0, max: 5, get: (p) => p.maxFeeBps, set: (v) => ({ maxFeeBps: v }) },
+];
+
+const show = (field, v) => {
+  if (v == null) return '—';
+  if (field === 'allowlist') return `${v.label} ${v.address}`;
+  if (field === 'perTx' || field === 'daily') return `${fmt(v)} tUSDC (raw ${v})`;
+  if (field === 'expiry') return `${simTime(v)} (raw ${v})`;
+  return String(v);
+};
+
+function Slider({ f, draft, setDraft }) {
+  const v = f.get(draft);
+  const id = `r-${f.key}`;
   return (
-    <label className="block">
-      <div className="mb-2 flex items-baseline justify-between">
-        <span className="text-sm text-ink/80">{label}</span>
-        <span className="text-2xl font-light">{value}<span className="ml-1 text-xs text-mute">{unit}</span></span>
+    <div>
+      <div className="flex items-baseline justify-between gap-2">
+        <label htmlFor={id} className="text-sm">{f.label}</label>
+        <span className="font-mono text-sm">{v} {f.unit}</span>
       </div>
-      <input type="range" className="w-full" min={min} max={max} step={step} value={value} onChange={(e) => onChange(Number(e.target.value))} />
-    </label>
+      <input id={id} type="range" className="mt-2 h-11 w-full" min={f.min} max={f.max} step={f.step || 1} value={v}
+        onChange={(e) => setDraft((d) => ({ ...d, ...f.set(Number(e.target.value)) }))} />
+    </div>
   );
 }
 
-function PolicyCard() {
-  const { now, policy, savePolicy, connected } = useVault();
-  const hoursLeft = Math.max(1, Math.round((policy.expiresAt - now) / HOUR));
-  const [d, setD] = useState({ perTx: policy.perTx, daily: policy.daily, hours: hoursLeft, breakerN: policy.breakerN, windowMin: policy.windowMin });
-  const set = (k) => (v) => setD((p) => ({ ...p, [k]: v }));
-
-  const changes = [
-    d.perTx !== policy.perTx && `Per payment ${policy.perTx} → ${d.perTx}`,
-    d.daily !== policy.daily && `Daily ${policy.daily} → ${d.daily}`,
-    d.hours !== hoursLeft && `Expiry ${hoursLeft}h → ${d.hours}h`,
-    d.breakerN !== policy.breakerN && `Breaker ${policy.breakerN} → ${d.breakerN} blocks`,
-    d.windowMin !== policy.windowMin && `Window ${policy.windowMin} → ${d.windowMin} min`,
-  ].filter(Boolean);
-
-  const invalid = d.perTx > d.daily;
-  const save = () => savePolicy({ perTx: d.perTx, daily: d.daily, expiresAt: Date.now() + d.hours * HOUR, breakerN: d.breakerN, windowMin: d.windowMin });
-
+function ConfirmDialog({ changes, onConfirm, onCancel }) {
+  const ref = useRef(null);
+  useEffect(() => { ref.current?.showModal(); }, []);
   return (
-    <Card title="Spending rules">
-      <div className="space-y-6">
-        <Slider label="Per payment" value={d.perTx} onChange={set('perTx')} min={0} max={20} step={0.5} unit="tUSDC" />
-        <Slider label="Per day" value={d.daily} onChange={set('daily')} min={0} max={100} step={1} unit="tUSDC" />
-        <Slider label="Agent permission expires in" value={d.hours} onChange={set('hours')} min={1} max={168} unit="hours" />
-        <div className="grid gap-6 sm:grid-cols-2">
-          <Slider label="Freeze after" value={d.breakerN} onChange={set('breakerN')} min={0} max={10} unit="blocks" />
-          <Slider label="…within" value={d.windowMin} onChange={set('windowMin')} min={5} max={240} step={5} unit="min" />
-        </div>
+    <dialog ref={ref} onCancel={onCancel} className="w-[min(92vw,40rem)] rounded-3xl bg-surface p-6 text-ink backdrop:bg-black/50">
+      <h2 className="text-xl font-medium">Confirm loosening</h2>
+      <p className="mt-1 text-sm text-mute">These changes give the agent more room. Review every value before confirming.</p>
+      <ul className="mt-4 grid gap-2 text-sm">
+        {changes.map((c, i) => (
+          <li key={i} className={`rounded-2xl p-3 ${c.loosens ? 'bg-ask-soft' : 'bg-paper'}`}>
+            <div className="font-medium">{c.field} {c.loosens ? '(loosens)' : '(tightens)'}</div>
+            <div className="break-all font-mono text-xs">{show(c.field, c.from)} → {show(c.field, c.to)}</div>
+          </li>
+        ))}
+      </ul>
+      <div className="mt-6 flex justify-end gap-2">
+        <button className="btn btn-ghost" onClick={onCancel}>Cancel</button>
+        <button className="btn btn-ink" onClick={onConfirm}>Confirm and save</button>
       </div>
-      <div className="mt-6 rounded-2xl bg-paper p-4">
-        <div className="text-xs text-mute">Review before you sign</div>
-        {changes.length ? (
-          <div className="mt-2 flex flex-wrap gap-2">{changes.map((c) => <span key={c} className="rounded-full bg-white px-3 py-1 text-xs ring-1 ring-black/10">{c}</span>)}</div>
-        ) : (
-          <p className="mt-1 text-sm text-ink/60">No changes yet.</p>
-        )}
-        {invalid && <p className="mt-2 text-xs text-bad">Per-payment limit can’t exceed the daily limit.</p>}
-      </div>
-      <button className="btn btn-brand mt-4" disabled={!connected || !changes.length || invalid} onClick={save}>Sign &amp; save (MOCK)</button>
-      {!connected && <p className="mt-2 text-xs text-mute">Connect a wallet to sign.</p>}
-    </Card>
+    </dialog>
   );
 }
 
-function AllowlistCard() {
-  const { allowlist, addAllowed, removeAllowed, connected } = useVault();
-  const [addr, setAddr] = useState('');
+function Allowlist({ draft, setDraft }) {
   const [label, setLabel] = useState('');
+  const [address, setAddress] = useState('');
+  const [kind, setKind] = useState('recipient');
   const [err, setErr] = useState('');
-
-  const add = () => {
-    const a = addr.trim();
-    if (!ADDR.test(a)) return setErr('Enter a valid address: 0x followed by 40 hex characters.');
-    if (!label.trim()) return setErr('Give this recipient a name you will recognise.');
-    if (allowlist.some((x) => x.address.toLowerCase() === a.toLowerCase())) return setErr('That address is already allowed.');
-    addAllowed({ address: a, label: label.trim() });
-    setAddr(''); setLabel(''); setErr('');
+  const add = (e) => {
+    e.preventDefault();
+    if (!label.trim()) return setErr('Add a label.');
+    if (!ADDRESS.test(address)) return setErr('Address must be 0x followed by 40 hex characters.');
+    if (draft.allowlist.some((x) => x.address.toLowerCase() === address.toLowerCase())) return setErr('Already on the list.');
+    setDraft((d) => ({ ...d, allowlist: [...d.allowlist, { label: label.trim(), address, kind }] }));
+    setLabel(''); setAddress(''); setErr('');
   };
-
   return (
-    <Card title="Allowed recipients">
-      {allowlist.length === 0 ? (
-        <Empty title="Nobody is allowed" desc="The agent can’t pay anyone until you add a recipient." />
-      ) : (
-        <ul className="space-y-2">
-          {allowlist.map((x) => (
-            <li key={x.address} className="flex items-center justify-between gap-3 rounded-2xl bg-paper px-4 py-3">
-              <div>
-                <div className="text-sm font-medium">{x.label}</div>
-                <div className="font-mono text-xs text-mute">{shortAddr(x.address)}</div>
-              </div>
-              <button className="text-xs text-mute underline underline-offset-2 hover:text-bad" disabled={!connected} onClick={() => removeAllowed(x.address)}>Remove</button>
-            </li>
-          ))}
-        </ul>
-      )}
-      <div className="mt-4 grid gap-2 sm:grid-cols-[1fr_1.6fr_auto]">
-        <input className="field" placeholder="Name" value={label} onChange={(e) => setLabel(e.target.value)} aria-label="Recipient name" />
-        <input className="field font-mono" placeholder="0x…" value={addr} onChange={(e) => setAddr(e.target.value)} aria-label="Recipient address" />
-        <button className="btn btn-ink" disabled={!connected} onClick={add}>Add</button>
-      </div>
-      {err && <p className="mt-2 text-xs text-bad" role="alert">{err}</p>}
-    </Card>
-  );
-}
-
-function FundsCard() {
-  const { balance, deposit, withdraw, connected } = useVault();
-  const [amt, setAmt] = useState('');
-  const n = Number(amt);
-  const ok = n > 0 && Number.isFinite(n);
-  return (
-    <Card title="Vault funds" action={<Pill tone="mock">Mock tUSDC</Pill>}>
-      <div className="text-4xl font-light tracking-tight">{balance.toFixed(2)} <span className="text-sm text-mute">tUSDC</span></div>
-      <div className="mt-4 flex gap-2">
-        <input className="field" inputMode="decimal" placeholder="Amount" value={amt} onChange={(e) => setAmt(e.target.value)} aria-label="Amount" />
-        <button className="btn btn-ink" disabled={!connected || !ok} onClick={() => { deposit(n); setAmt(''); }}>Deposit</button>
-        <button className="btn btn-ghost" disabled={!connected || !ok || n > balance} onClick={() => { withdraw(n); setAmt(''); }}>Withdraw</button>
-      </div>
-      <p className="mt-2 text-xs text-mute">Withdrawing always works, even when the agent is frozen.</p>
-    </Card>
-  );
-}
-
-function KillSwitch() {
-  const { policy, freeze, unfreeze, revoke, restore, connected } = useVault();
-  return (
-    <Card title="Emergency controls" className="ring-bad/20">
-      <p className="text-sm text-ink/70">Freeze stops the agent instantly. Revoke removes its key so it can’t propose anything.</p>
-      <div className="mt-4 flex flex-wrap gap-2">
-        {policy.frozen ? (
-          <button className="btn btn-ink" disabled={!connected} onClick={unfreeze}>Unfreeze agent</button>
-        ) : (
-          <button className="btn btn-danger" disabled={!connected} onClick={freeze}>Freeze agent</button>
-        )}
-        {policy.revoked ? (
-          <button className="btn btn-ink" disabled={!connected} onClick={restore}>Restore key</button>
-        ) : (
-          <button className="btn btn-danger" disabled={!connected} onClick={revoke}>Pause &amp; revoke agent</button>
-        )}
-      </div>
-    </Card>
+    <div className="grid gap-3">
+      <ul className="grid gap-2">
+        {draft.allowlist.map((a) => (
+          <li key={a.address} className="flex items-center gap-3 rounded-2xl bg-paper p-3">
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2 text-sm font-medium">{a.label} <Simulated /></div>
+              <div className="break-all font-mono text-[11px] text-mute">{a.kind === 'contract' ? 'Destination contract' : 'Recipient'} · {a.address}</div>
+            </div>
+            <button className="btn btn-ghost !px-3" onClick={() => setDraft((d) => ({ ...d, allowlist: d.allowlist.filter((x) => x.address !== a.address) }))}>Remove</button>
+          </li>
+        ))}
+        {!draft.allowlist.length && <Empty title="Allowlist empty" desc="Every proposal will be blocked." />}
+      </ul>
+      <form onSubmit={add} className="grid gap-2 sm:grid-cols-[1fr_2fr_auto_auto]">
+        <label className="sr-only" htmlFor="al-l">Label</label>
+        <input id="al-l" className="field" placeholder="Label" value={label} onChange={(e) => setLabel(e.target.value)} />
+        <label className="sr-only" htmlFor="al-a">Address</label>
+        <input id="al-a" className="field font-mono" placeholder="0x…" value={address} onChange={(e) => setAddress(e.target.value.trim())} />
+        <label className="sr-only" htmlFor="al-k">Type</label>
+        <select id="al-k" className="field" value={kind} onChange={(e) => setKind(e.target.value)}>
+          <option value="recipient">Recipient</option>
+          <option value="contract">Destination contract</option>
+        </select>
+        <button className="btn btn-ghost">Add</button>
+      </form>
+      {err && <p role="alert" className="text-xs text-block">{err}</p>}
+    </div>
   );
 }
 
 export default function RulesPage() {
+  const { state, setPolicy } = useVault();
+  const { policy, clock } = state;
+  const [draft, setDraft] = useState(policy);
+  const [confirming, setConfirming] = useState(null);
+  const [base, setBase] = useState(policy);
+  if (base !== policy) { setBase(policy); setDraft(policy); } // re-sync after save, reset or storage load
+
+  const changes = diffPolicy(policy, draft);
+  const loosens = changes.some((c) => c.loosens);
+  const days = Math.max(0, Math.round((draft.expiry - clock) / DAY));
+  const history = state.events.filter((e) => e.type === 'PolicyUpdated').reverse();
+
+  const save = () => (loosens ? setConfirming(changes) : setPolicy(draft));
+
   return (
-    <div className="space-y-6">
+    <div className="grid gap-4">
       <div>
-        <p className="text-sm text-mute">You set the rules once. The contract enforces them every time.</p>
-        <h1 className="mt-1 text-5xl font-normal tracking-tight sm:text-6xl">Rules</h1>
+        <h1 className="text-3xl font-light tracking-tight sm:text-4xl">Rules <span className="text-lg text-mute">v{policy.version}</span></h1>
+        <p className="mt-1 text-sm text-mute">Tightening a rule applies instantly. Loosening one needs your explicit confirmation.</p>
       </div>
-      <div className="grid gap-4 lg:grid-cols-[1.3fr_1fr]">
-        <PolicyCard />
-        <div className="space-y-4">
-          <FundsCard />
-          <KillSwitch />
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card title="Limits">
+          <div className="grid gap-5">
+            {FIELDS.map((f) => <Slider key={f.key} f={f} draft={draft} setDraft={setDraft} />)}
+            <div>
+              <div className="flex items-baseline justify-between gap-2">
+                <label htmlFor="r-exp" className="text-sm">Expiry</label>
+                <span className="font-mono text-sm">{days} days</span>
+              </div>
+              <input id="r-exp" type="range" className="mt-2 h-11 w-full" min={1} max={30} value={days}
+                onChange={(e) => setDraft((d) => ({ ...d, expiry: clock + Number(e.target.value) * DAY }))} />
+            </div>
+          </div>
+        </Card>
+        <div className="grid content-start gap-4">
+          <Card title="Allowlist: recipients and destination contracts"><Allowlist draft={draft} setDraft={setDraft} /></Card>
+          <Card title="Pending changes">
+            {changes.length ? (
+              <ul className="mb-4 grid gap-1 text-sm">
+                {changes.map((c, i) => <li key={i}>{c.loosens ? 'Loosens' : 'Tightens'}: <span className="font-mono text-xs">{c.field}</span></li>)}
+              </ul>
+            ) : <p className="mb-4 text-sm text-mute">No changes.</p>}
+            <div className="flex gap-2">
+              <button className="btn btn-ink" disabled={!changes.length} onClick={save}>{loosens ? 'Review and confirm' : 'Apply'}</button>
+              <button className="btn btn-ghost" disabled={!changes.length} onClick={() => setDraft(policy)}>Discard</button>
+            </div>
+          </Card>
+          <Card title="Policy history">
+            {history.length ? (
+              <ul className="grid gap-1 text-sm">
+                {history.map((e) => <li key={e.seq}>v{e.version} · {simTime(e.ts)} · {e.changes.map((c) => c.field).join(', ')}</li>)}
+              </ul>
+            ) : <p className="text-sm text-mute">v1 · demo defaults</p>}
+          </Card>
         </div>
       </div>
-      <AllowlistCard />
+      {confirming && (
+        <ConfirmDialog changes={confirming} onCancel={() => setConfirming(null)} onConfirm={() => { setPolicy(draft); setConfirming(null); }} />
+      )}
     </div>
   );
 }

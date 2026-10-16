@@ -1,110 +1,155 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { useVault } from '../store/useVaultStore';
-import { labelFor, REASON_TEXT } from '../lib/rules';
-import { Card, Empty, Pill, SegBar } from '../components/ui';
+import { ACTIONS, TOKENS, blocksInWindow, fmt, validateProposal } from '../lib/engine';
+import { ATTACKER, FEED, SCENARIOS } from '../lib/scenarios';
+import { labelFor } from '../lib/receipts';
+import { REASON_TEXT } from '../lib/site';
+import { Card, Simulated, TierBadge } from '../components/ui';
 
-const EXAMPLES = ['Pay 1.5 to Data service', 'Pay 4 to Research API', 'Send 15 to 0x000000000000000000000000000000000000dEaD'];
+const CUSTOM = 'custom';
+const STAGES = ['Proposed', 'Evaluated', 'Decision'];
 
-function ActionPreview({ r, allowlist }) {
-  const note = r.tier === 'AUTO' ? 'Within your rules. Paid instantly.' : REASON_TEXT[r.code];
+function ProposalForm() {
+  const { state, propose } = useVault();
+  const book = state.policy.allowlist;
+  const [form, setForm] = useState({ action: 'swap', token: 'tUSDC', amount: '5', destination: book[0]?.address || CUSTOM });
+  const [custom, setCustom] = useState(ATTACKER);
+  const proposal = { action: form.action, token: form.token, amount: Number(form.amount), destination: form.destination === CUSTOM ? custom : form.destination };
+  const [raw, setRaw] = useState(null); // null = JSON mirrors the form
+  const text = raw ?? JSON.stringify(proposal, null, 2);
+  const [errors, setErrors] = useState([]);
+  const set = (k) => (e) => { setRaw(null); setForm((f) => ({ ...f, [k]: e.target.value })); };
+
+  const submit = (e) => {
+    e.preventDefault();
+    let parsed;
+    try { parsed = JSON.parse(text); } catch { return setErrors(['Not valid JSON.']); }
+    const v = validateProposal(parsed);
+    if (!v.ok) return setErrors(v.errors);
+    setErrors([]);
+    propose(v.value);
+  };
+
   return (
-    <div className="rounded-2xl bg-paper p-3.5">
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-sm font-medium">{r.amount} tUSDC → {labelFor(r.to, allowlist)}</span>
-        <Pill tone={r.tier} />
+    <form onSubmit={submit} className="grid gap-3">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <label className="grid gap-1 text-xs text-mute">action
+          <select className="field text-ink" value={form.action} onChange={set('action')}>{ACTIONS.map((a) => <option key={a}>{a}</option>)}</select>
+        </label>
+        <label className="grid gap-1 text-xs text-mute">token
+          <select className="field text-ink" value={form.token} onChange={set('token')}>{TOKENS.map((t) => <option key={t}>{t}</option>)}</select>
+        </label>
+        <label className="grid gap-1 text-xs text-mute">amount
+          <input className="field text-ink" inputMode="decimal" value={form.amount} onChange={set('amount')} />
+        </label>
+        <label className="grid gap-1 text-xs text-mute">destination
+          <select className="field text-ink" value={form.destination} onChange={set('destination')}>
+            {book.map((a) => <option key={a.address} value={a.address}>{a.label}</option>)}
+            <option value={CUSTOM}>Custom address (attack simulator)</option>
+          </select>
+        </label>
       </div>
-      <p className="mt-1 text-xs text-mute">{note}</p>
-    </div>
+      {form.destination === CUSTOM && (
+        <label className="grid gap-1 text-xs text-mute">custom address
+          <input className="field font-mono text-ink" value={custom} onChange={(e) => { setRaw(null); setCustom(e.target.value.trim()); }} />
+        </label>
+      )}
+      <label className="grid gap-1 text-xs text-mute">Proposal JSON (strict schema; you can edit it to test validation)
+        <textarea className="field min-h-36 font-mono text-xs text-ink" spellCheck={false} value={text} onChange={(e) => setRaw(e.target.value)} />
+      </label>
+      {errors.length > 0 && (
+        <ul role="alert" className="grid gap-1 rounded-2xl bg-block-soft p-3 text-xs text-block">{errors.map((x) => <li key={x}>{x}</li>)}</ul>
+      )}
+      <button className="btn btn-ink">Submit proposal</button>
+    </form>
+  );
+}
+
+function Flight() {
+  const { flight, state, live } = useVault();
+  return (
+    <Card title="Latest decision">
+      <p className="sr-only" aria-live="polite">{live}</p>
+      {!flight ? <p className="text-sm text-mute">No proposal yet.</p> : (
+        <div>
+          <ol className="flex flex-wrap gap-2 text-xs">
+            {STAGES.map((s, i) => (
+              <li key={s} className={`rounded-full px-3 py-1.5 ${i <= flight.stage ? 'bg-ink text-surface' : 'bg-ink/5 text-mute'}`}>{i + 1}. {s}</li>
+            ))}
+          </ol>
+          <div className="mt-4 text-sm">
+            <span className="font-mono">{flight.decision.proposal.action}</span> {fmt(flight.decision.proposal.amount)} tUSDC to {labelFor(flight.decision.proposal.destination, state.policy.allowlist)}
+          </div>
+          {flight.stage === 2 && (
+            <div className="rise mt-3 flex flex-wrap items-center gap-2">
+              <TierBadge tier={flight.decision.tier} />
+              <span className="text-sm text-mute">{REASON_TEXT[flight.decision.reason]}</span>
+            </div>
+          )}
+        </div>
+      )}
+      <div className="mt-4 text-xs text-mute">
+        Agent: <strong className="text-ink">{state.agent}</strong> · blocks in window {state.agent === 'ACTIVE' ? blocksInWindow(state) : '—'} / {state.policy.breakerThreshold}
+      </div>
+    </Card>
+  );
+}
+
+function Scenarios() {
+  const { run, startScenario, stepScenario, stopScenario, speed, setSpeed, reset } = useVault();
+  const [stepMode, setStepMode] = useState(false);
+  const busy = Boolean(run);
+  return (
+    <Card title={<span className="flex items-center gap-2">Scenarios <Simulated>Demo data</Simulated></span>}>
+      <div className="flex flex-wrap gap-2">
+        <button className="btn btn-ink" disabled={busy} onClick={() => startScenario('normal', !stepMode)}>Run normal day</button>
+        <button className="btn btn-danger" disabled={busy} onClick={() => startScenario('injection', !stepMode)}>Inject poisoned data</button>
+        <button className="btn btn-ghost" onClick={reset}>Reset</button>
+      </div>
+      <div className="mt-4 flex flex-wrap items-center gap-4 text-sm">
+        <label className="flex min-h-11 items-center gap-2"><input type="checkbox" className="h-5 w-5" checked={stepMode} onChange={(e) => setStepMode(e.target.checked)} /> Step-through</label>
+        <label className="flex items-center gap-2">Speed
+          <select className="field !w-auto !py-2" value={speed} onChange={(e) => setSpeed(e.target.value)}>
+            <option value="slow">Slow</option><option value="normal">Normal</option><option value="fast">Fast</option>
+          </select>
+        </label>
+      </div>
+      {run && (
+        <div className="mt-4 flex flex-wrap items-center gap-3 rounded-2xl bg-paper p-3 text-sm">
+          <span>Step {run.index + 1} of {SCENARIOS[run.name].length}: {SCENARIOS[run.name][run.index].note}</span>
+          {!run.auto && <button className="btn btn-ink" onClick={stepScenario}>Next step</button>}
+          <button className="btn btn-ghost" onClick={stopScenario}>Stop</button>
+        </div>
+      )}
+    </Card>
   );
 }
 
 export default function AgentPage() {
-  const { chat, thinking, runInstruction, demoAttack, connected, policy, spentToday, requests, allowlist, approve, reject } = useVault();
-  const [text, setText] = useState('');
-  const endRef = useRef(null);
-  const pending = requests.filter((r) => r.status === 'PENDING');
-  const left = Math.max(0, policy.daily - spentToday);
-
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }); }, [chat.length, thinking]);
-
-  const send = (msg) => {
-    if (!msg.trim() || thinking) return;
-    setText('');
-    runInstruction(msg);
-  };
-
   return (
-    <div className="space-y-6">
+    <div className="grid gap-4">
       <div>
-        <p className="text-sm text-mute">The AI proposes. It never signs and never holds your funds.</p>
-        <h1 className="mt-1 text-5xl font-normal tracking-tight sm:text-6xl">Agent</h1>
+        <h1 className="text-3xl font-light tracking-tight sm:text-4xl">Agent Console</h1>
+        <p className="mt-1 max-w-2xl text-sm text-mute">
+          No chat. The agent sends a strict proposal; the engine decides. We can&apos;t stop an AI from being tricked. So we make being tricked harmless.
+        </p>
       </div>
-
-      <div className="grid gap-4 lg:grid-cols-[1.6fr_1fr]">
-        <Card title="AI assistant" action={<Pill tone="mock">Mock LLM</Pill>} className="flex min-h-[520px] flex-col">
-          <div className="flex-1 space-y-4 overflow-y-auto pr-1">
-            {chat.length === 0 && !thinking && (
-              <Empty title="Tell the agent what to pay" desc="Try an example below. Each proposed payment gets a predicted tier before the vault decides." />
-            )}
-            {chat.map((m, i) =>
-              m.role === 'user' ? (
-                <div key={i} className="ml-auto max-w-[85%] rounded-3xl rounded-br-lg bg-ink px-4 py-3 text-sm text-white">{m.text}</div>
-              ) : (
-                <div key={i} className="max-w-[92%] space-y-2">
-                  <p className="text-sm text-ink/80">{m.text}</p>
-                  {m.results.map((r, j) => <ActionPreview key={j} r={r} allowlist={allowlist} />)}
-                </div>
-              ),
-            )}
-            {thinking && <p className="text-sm text-mute">Agent is thinking…</p>}
-            <div ref={endRef} />
-          </div>
-
-          <div className="mt-4 flex flex-wrap gap-2">
-            {EXAMPLES.map((x) => (
-              <button key={x} className="rounded-full bg-paper px-3 py-1.5 text-xs text-ink/70 hover:bg-black/5" onClick={() => setText(x)}>
-                {x.length > 34 ? `${x.slice(0, 32)}…` : x}
-              </button>
-            ))}
-          </div>
-          <form className="mt-3 flex gap-2" onSubmit={(e) => { e.preventDefault(); send(text); }}>
-            <input className="field" value={text} onChange={(e) => setText(e.target.value)} placeholder="Enter your request, e.g. Pay 1.5 to Data service" aria-label="Instruction for the agent" />
-            <button className="btn btn-ink" disabled={!connected || thinking || !text.trim()} type="submit">Send</button>
-          </form>
-          {!connected && <p className="mt-2 text-xs text-mute">Connect a wallet to send instructions.</p>}
-        </Card>
-
-        <div className="space-y-4">
-          <Card title="Budget left today">
-            <div className="text-4xl font-light tracking-tight">{left.toFixed(2)} <span className="text-sm text-mute">of {policy.daily} tUSDC</span></div>
-            <div className="mt-4"><SegBar black={policy.daily ? (spentToday / policy.daily) * 100 : 0} brand={0} /></div>
-            <p className="mt-3 text-xs text-mute">Per payment up to {policy.perTx} tUSDC.</p>
-          </Card>
-
-          <Card title={`Needs your approval (${pending.length})`}>
-            {pending.length === 0 ? (
-              <Empty title="All clear" desc="Payments over your limits will wait here for your signature." />
-            ) : (
-              <ul className="space-y-2">
-                {pending.map((r) => (
-                  <li key={r.id} className="rounded-2xl bg-paper p-3.5">
-                    <div className="text-sm font-medium">{r.amount} tUSDC → {labelFor(r.to, allowlist)}</div>
-                    <p className="text-xs text-mute">{r.reason}</p>
-                    <div className="mt-3 flex gap-2">
-                      <button className="btn btn-brand !py-1.5" disabled={!connected} onClick={() => approve(r.id)}>Approve in wallet</button>
-                      <button className="btn btn-ghost !py-1.5" disabled={!connected} onClick={() => reject(r.id)}>Reject</button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Card>
-
-          <Card title="Prove the guardrails">
-            <p className="text-sm text-ink/70">Make the agent try to send 15 tUSDC to a stranger. The vault should refuse and record it.</p>
-            <button className="btn btn-danger mt-4" disabled={!connected || thinking} onClick={demoAttack}>Run demo attack</button>
+      <Scenarios />
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card title="Agent proposal (strict schema)"><ProposalForm /></Card>
+        <div className="grid content-start gap-4">
+          <Flight />
+          <Card title={<span className="flex items-center gap-2">Market feed: untrusted data the agent reads <Simulated /></span>}>
+            <ul className="grid gap-2">
+              {FEED.map((f) => (
+                <li key={f.id} className={`rounded-2xl p-3 text-sm ${f.poisoned ? 'bg-block-soft ring-1 ring-block/30' : 'bg-paper'}`}>
+                  <div className="mb-1 flex items-center gap-2 text-xs text-mute">{f.source}{f.poisoned && <TierBadge tier="BLOCK" label="Poisoned" />}</div>
+                  <code className="break-words font-mono text-xs">{f.text}</code>
+                </li>
+              ))}
+            </ul>
           </Card>
         </div>
       </div>
