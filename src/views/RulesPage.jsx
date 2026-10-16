@@ -27,6 +27,24 @@ const show = (field, v) => {
   return String(v);
 };
 
+// Editable integer box next to each slider; clamps to the slider range.
+function NumberBox({ id, value, min, max, unit, onChange }) {
+  const [text, setText] = useState(null); // null = show the live value
+  const commit = () => {
+    const n = Math.round(Number(text));
+    if (text !== null && text.trim() !== '' && Number.isFinite(n)) onChange(Math.min(max, Math.max(min, n)));
+    setText(null);
+  };
+  return (
+    <span className="flex items-center gap-1.5 font-mono text-sm">
+      <input id={id} inputMode="numeric" aria-label={`${unit} value`} className="w-20 rounded-xl bg-paper px-2 py-1.5 text-right ring-1 ring-ink/10 focus:bg-surface focus:outline-none focus:ring-2 focus:ring-brand"
+        value={text ?? value} onChange={(e) => setText(e.target.value.replace(/[^0-9]/g, ''))} onBlur={commit}
+        onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); if (e.key === 'Escape') { setText(null); e.currentTarget.blur(); } }} />
+      {unit}
+    </span>
+  );
+}
+
 function Slider({ f, draft, setDraft }) {
   const v = f.get(draft);
   const id = `r-${f.key}`;
@@ -34,7 +52,7 @@ function Slider({ f, draft, setDraft }) {
     <div>
       <div className="flex items-baseline justify-between gap-2">
         <label htmlFor={id} className="text-sm">{f.label}</label>
-        <span className="font-mono text-sm">{v} {f.unit}</span>
+        <NumberBox id={`${id}-n`} value={v} min={f.min} max={f.max} unit={f.unit} onChange={(n) => setDraft((d) => ({ ...d, ...f.set(n) }))} />
       </div>
       <input id={id} type="range" className="mt-2 h-11 w-full" min={f.min} max={f.max} step={f.step || 1} value={v}
         onChange={(e) => setDraft((d) => ({ ...d, ...f.set(Number(e.target.value)) }))} />
@@ -137,7 +155,7 @@ export default function RulesPage() {
             <div>
               <div className="flex items-baseline justify-between gap-2">
                 <label htmlFor="r-exp" className="text-sm">Expiry</label>
-                <span className="font-mono text-sm">{days} days</span>
+                <NumberBox id="r-exp-n" value={days} min={1} max={30} unit="days" onChange={(n) => setDraft((d) => ({ ...d, expiry: clock + n * DAY }))} />
               </div>
               <input id="r-exp" type="range" className="mt-2 h-11 w-full" min={1} max={30} value={days}
                 onChange={(e) => setDraft((d) => ({ ...d, expiry: clock + Number(e.target.value) * DAY }))} />
