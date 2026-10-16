@@ -3,7 +3,6 @@ const v = (name) => `rgb(var(--${name}) / <alpha-value>)`;
 
 module.exports = {
   content: ["./src/**/*.{js,jsx,mdx}"],
-  darkMode: 'media',
   theme: {
     extend: {
       colors: {

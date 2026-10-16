@@ -20,26 +20,6 @@
   --freeze: 29 78 196;
   --freeze-soft: 226 234 255;
 }
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-    --ink: 238 238 234;
-    --canvas: 14 14 14;
-    --paper: 26 26 25;
-    --surface: 34 34 33;
-    --mute: 168 168 162;
-    --line: 52 52 50;
-    --brand-soft: 70 34 12;
-    --brand-deep: 255 168 120;
-    --auto: 110 220 150;
-    --auto-soft: 20 52 33;
-    --block: 255 130 130;
-    --block-soft: 66 22 24;
-    --freeze: 150 180 255;
-    --freeze-soft: 26 36 70;
-  }
-}
-
 * { scrollbar-width: thin; }
 
 @layer components {
