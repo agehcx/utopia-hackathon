@@ -22,10 +22,10 @@ Gas is tiny: one proposal costs about 0.00000002 test AVAX. The agent's 0.05 AVA
 ## 3-minute script
 
 **1. The pitch (home page `/`, 20 s)**
-"AI agents need to spend money. Today you either hand funds to a custodian or give the agent your keys with no ceiling. Bounded is the spending limit: the AI proposes, you set the rules, a contract enforces them."
+"AI agents need to spend money. Today you either hand funds to a custodian or give the agent your keys with no ceiling. Bounded is a spending firewall: x402 gives agents a way to pay, Bounded gives owners a way to say no. The AI proposes, you set the rules, a contract enforces them."
 
 **2. Simulated story (`/app/agent`, 60 s)**
-- Click **Run normal day**: a sentiment API payment and a small swap go through (Auto). A bigger swap is over the limit, goes to Ask, and is approved.
+- Click **Run normal day**: a sentiment API payment and a 10 tUSDC data bundle go through (Auto). A bigger 25 tUSDC bundle is over the limit, goes to Ask, and is approved.
 - Click **Inject poisoned data**: point at the red feed item that tells the agent to send 45 tUSDC to `0x…dEaD`. The agent tries three times. Each try is **Blocked**; the third freezes the agent.
 - Open **Overview**: "6 proposals: 2 auto, 1 approved, 3 blocked, agent frozen." Computed from the event log.
 - Optional: **Rules** tab, raise a limit to show the confirm-diff dialog ("loosening needs your confirmation").

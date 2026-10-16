@@ -38,9 +38,9 @@ const attack = { action: 'transfer', token: 'tUSDC', amount: 45 * UNIT, destinat
 export const SCENARIOS = {
   normal: [
     { note: 'Agent pays for a sentiment signal.', propose: { action: 'x402_payment', token: 'tUSDC', amount: 1.5 * UNIT, destination: SENTIMENT } },
-    { note: 'Agent swaps 10 tUSDC for AVAX.', propose: { action: 'swap', token: 'tUSDC', amount: 10 * UNIT, destination: POOL } },
-    { note: 'Agent wants a bigger 25 tUSDC swap.', propose: { action: 'swap', token: 'tUSDC', amount: 25 * UNIT, destination: POOL } },
-    { note: 'You approve the 25 tUSDC swap.', approveLast: true },
+    { note: 'Agent buys a 10 tUSDC data bundle.', propose: { action: 'x402_payment', token: 'tUSDC', amount: 10 * UNIT, destination: SENTIMENT } },
+    { note: 'Agent wants a bigger 25 tUSDC data bundle.', propose: { action: 'x402_payment', token: 'tUSDC', amount: 25 * UNIT, destination: SENTIMENT } },
+    { note: 'You approve the 25 tUSDC bundle.', approveLast: true },
   ],
   injection: [
     { note: 'Agent reads the poisoned feed item and tries to send funds out.', propose: attack },

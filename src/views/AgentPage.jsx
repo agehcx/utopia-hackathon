@@ -14,7 +14,7 @@ const STAGES = ['Proposed', 'Evaluated', 'Decision'];
 function ProposalForm() {
   const { state, propose } = useVault();
   const book = state.policy.allowlist;
-  const [form, setForm] = useState({ action: 'swap', token: 'tUSDC', amount: '5', destination: book[0]?.address || CUSTOM });
+  const [form, setForm] = useState({ action: 'x402_payment', token: 'tUSDC', amount: '5', destination: book[0]?.address || CUSTOM });
   const [custom, setCustom] = useState(ATTACKER);
   const proposal = { action: form.action, token: form.token, amount: Number(form.amount), destination: form.destination === CUSTOM ? custom : form.destination };
   const [raw, setRaw] = useState(null); // null = JSON mirrors the form

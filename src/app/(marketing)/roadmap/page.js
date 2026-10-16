@@ -16,6 +16,7 @@ const COLUMNS = [
     ['Demo pool and x402-style payments', 'Simulated'],
   ]],
   ['Next', [
+    ['Request expiry, revalidation on approve, idempotency keys, rate limits per recipient', 'Planned'],
     ['Vault-funded x402 wallet top-ups in capped increments', 'Planned'],
     ['Plain-language rule setup (tighten easy, loosen gated)', 'Planned'],
     ['Rule templates', 'Planned'],
@@ -23,8 +24,8 @@ const COLUMNS = [
     ['Wallet-connected app reading the Fuji contract', 'Planned'],
   ]],
   ['Later', [
+    ['Function-selector and calldata rules (needed before any DEX or DeFi use)', 'Planned'],
     ['Drawdown and portfolio-value rules (needs oracles)', 'Planned'],
-    ['Real DEX integration', 'Planned'],
     ['Native x402 signing from the vault (feasibility to verify)', 'Planned'],
     ['Multi-approver', 'Planned'],
     ['Platform SDK', 'Planned'],

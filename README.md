@@ -60,7 +60,7 @@ AI proposes, you authorize, the contract enforces. We promise bounded loss, not 
 | Live on Fuji tab (`/app/live`) | Real testnet transactions: reads vault state via Viem and contract events via Routescan, signs agent proposals via `/api/agent`, and signs owner actions (`approve`, `reject`, `freeze`, `unfreeze`, `setPolicy`, `withdraw`) in your browser wallet. |
 | Simulated tabs (`/app`, `/app/rules`, `/app/agent`, `/app/approvals`, `/app/receipts`) | Runs on a deterministic simulated engine that mirrors the contract (works offline, resettable). |
 | Max %-of-vault cap, fee cap, split over-limit reasons | Simulated engine only; not in the contract yet |
-| x402-style payments, demo pool swaps | Simulated |
+| x402-style payments (no real facilitator) | Simulated |
 | Pricing (free contract; hosted alerts/approvals unpriced) | Hypothesis, to be tested in a pilot. No billing exists. |
 
 ## Repository
@@ -145,7 +145,7 @@ The script deploys tUSDC and the vault, seeds a policy (per-tx 2, daily 10, brea
 
 See [DEMO.md](DEMO.md) for the full presenter script and troubleshooting guide.
 
-1. Open `/app/agent`. Click **Run normal day**: an x402-style payment and a 10 tUSDC swap execute (Auto), a 25 tUSDC swap goes to Ask and you approve it.
+1. Open `/app/agent`. Click **Run normal day**: two x402-style payments (1.5 and 10 tUSDC) execute (Auto), a 25 tUSDC payment goes to Ask and you approve it.
 2. Click **Inject poisoned data**: the agent reads a poisoned feed item and tries to send 45 tUSDC to `0x…dEaD` three times. Each attempt is blocked (not allowlisted); the third freezes the agent.
 3. Open `/app`: the summary reads "6 proposals: 2 auto, 1 approved, 3 blocked, agent frozen.", computed from the event log.
 4. Open `/app/rules`, raise a limit: a confirm dialog shows the exact diff. Lower one: it applies in one click.

@@ -76,7 +76,7 @@ export function VaultProvider({ children }) {
     const step = steps[r.index];
     const out = runStep(ref.current, step);
     apply(out);
-    if (step.approveLast && !out.error) setLive('You approved the pending swap. Executed.');
+    if (step.approveLast && !out.error) setLive('You approved the pending payment. Executed.');
     setRunBoth(r.index + 1 >= steps.length ? null : { ...r, index: r.index + 1 });
   }, [apply, setRunBoth]);
 
