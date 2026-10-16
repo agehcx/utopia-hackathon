@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <rect width="1024" height="1024" fill="#FFFFFF" />
+  <g transform="translate(292, 270)">
+    <rect width="440" height="326" rx="163" ry="163" fill="#FF6A1A" />
+    <g transform="translate(135, 78) scale(7.08)">
+      <path d="M12 0C13 7 17 11 24 12C17 13 13 17 12 24C11 17 7 13 0 12C7 11 11 7 12 0Z" fill="#0A0A0A" />
+    </g>
+  </g>
+  <text x="512" y="728" text-anchor="middle" font-family="'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="108" font-weight="500" letter-spacing="-0.04em" fill="#0A0A0A">Bounded</text>
+</svg>
