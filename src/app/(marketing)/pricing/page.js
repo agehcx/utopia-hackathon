@@ -1,11 +1,12 @@
 import { HypothesisLabel, PageTitle, Section, Source, SourceList } from '../../../components/site/blocks';
 import FeeCalc from '../../../components/site/FeeCalc';
+import { BRAND } from '@/lib/site';
 
 export const metadata = { title: 'Pricing', description: 'Pricing hypotheses: free safety core, capped usage fee on executed volume.' };
 
 const TIERS = [
   ['Free open-source core', '$0', 'Limits, allowlists, tiers, freeze, withdraw, circuit breaker, receipt timeline. Never charged on blocked or frozen actions.'],
-  ['Usage fee (individuals)', '1–2 bps on executed volume', 'Auto and approved Ask only, hard-capped by your "Max Bounded fee" rule. Includes hosted relay, alerts, phone approvals, history.'],
+  ['Usage fee (individuals)', '1–2 bps on executed volume', `Auto and approved Ask only, hard-capped by your "Max ${BRAND} fee" rule. Includes hosted relay, alerts, phone approvals, history.`],
   ['Teams', '~$99 / month', 'Multi-approver, audit export, approval routing, shared templates.'],
   ['Platforms', 'Per protected agent', 'White-label SDK. Price to be validated.'],
 ];
@@ -36,7 +37,7 @@ export default function Pricing() {
       <Section eyebrow="Calculator" title="What would a usage fee be?">
         <div className="grid gap-4 lg:grid-cols-2">
           <FeeCalc />
-          <div className="text-sm text-mute"><p>Formula: monthly fee = executed volume × bps ÷ 10,000.</p><p className="mt-2">This shows what a user would pay. We don&apos;t project revenue for Bounded.</p><div className="mt-4"><HypothesisLabel /></div></div>
+          <div className="text-sm text-mute"><p>Formula: monthly fee = executed volume × bps ÷ 10,000.</p><p className="mt-2">This shows what a user would pay. We don&apos;t project revenue for {BRAND}.</p><div className="mt-4"><HypothesisLabel /></div></div>
         </div>
       </Section>
       <SourceList ids={['builderCodes']} />

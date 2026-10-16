@@ -1,8 +1,9 @@
 import { CompareNote, LayerDiagram, PageTitle, Section, Source, SourceList } from '../../../components/site/blocks';
+import { BRAND } from '@/lib/site';
 
-export const metadata = { title: 'Compare', description: 'Where Bounded fits next to x402, off-chain policy layers, custodial AI trading and smart accounts.' };
+export const metadata = { title: 'Compare', description: `Where ${BRAND} fits next to x402, off-chain policy layers, custodial AI trading and smart accounts.` };
 
-const COLS = ['Bounded', 'x402 (rail)', 'Off-chain policy layers (e.g. PolicyLayer)', 'Custodial AI trading (e.g. Bitget AI)', 'Smart-account modules', 'Agent holds full key'];
+const COLS = [`${BRAND}`, 'x402 (rail)', 'Off-chain policy layers (e.g. PolicyLayer)', 'Custodial AI trading (e.g. Bitget AI)', 'Smart-account modules', 'Agent holds full key'];
 
 // [value, hover note] per column.
 const ROWS = [
@@ -21,7 +22,7 @@ const Cell = ({ v: [v, note] }) => <span title={note || undefined} className={`f
 export default function Compare() {
   return (
     <>
-      <PageTitle title="Where Bounded fits" sub="x402 is how an agent pays. Bounded decides whether it's allowed to. They work together." />
+      <PageTitle title={`Where ${BRAND} fits`} sub={`x402 is how an agent pays. ${BRAND} decides whether it's allowed to. They work together.`} />
       <Section><LayerDiagram /></Section>
       <Section eyebrow="Comparison" title="The combination is the point.">
         <p className="mb-6 max-w-3xl text-mute">On-chain enforcement alone is not unique: smart accounts have it. The difference is the combination: enforcement the agent can&apos;t skip, tiers with human approval, receipts for blocked attempts, an automatic breaker, and coverage of every rail.</p>
@@ -50,7 +51,7 @@ export default function Compare() {
       </Section>
       <Section eyebrow="Custodial AI trading" title="Same architecture, different custody.">
         <p className="max-w-3xl">
-          Bitget launched GetAgent Playbook in June 2026, running AI strategies through isolated sub-accounts with risk parameters and auditable workflows<Source id="playbook" n={1} />, after its AI tools passed 1M users and $1.2B cumulative volume (company-reported)<Source id="bitgetUsers" n={2} />. Same architecture, but the funds sit on the exchange. Bounded puts it in a contract you own.
+          Bitget launched GetAgent Playbook in June 2026, running AI strategies through isolated sub-accounts with risk parameters and auditable workflows<Source id="playbook" n={1} />, after its AI tools passed 1M users and $1.2B cumulative volume (company-reported)<Source id="bitgetUsers" n={2} />. Same architecture, but the funds sit on the exchange. {BRAND} puts it in a contract you own.
         </p>
         <CompareNote />
         <SourceList ids={['playbook', 'bitgetUsers', 'x402', 'policyLayer']} />

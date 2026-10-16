@@ -31,3 +31,8 @@ test('Bitget user number always carries company-reported', () => {
     }
   }
 });
+
+test('brand name lives only in src/lib/site.js', () => {
+  const hits = walk('src').filter((f) => !f.endsWith('lib/site.js') && /\bBounded\b/.test(readFileSync(f, 'utf8')));
+  assert.deepEqual(hits, []);
+});

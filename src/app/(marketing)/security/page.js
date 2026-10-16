@@ -1,6 +1,7 @@
 import { PageTitle, Section, ThreatTable } from '../../../components/site/blocks';
+import { BRAND } from '@/lib/site';
 
-export const metadata = { title: 'Security', description: 'Threat model, assumptions and limitations of the Bounded prototype.' };
+export const metadata = { title: 'Security', description: `Threat model, assumptions and limitations of the ${BRAND} prototype.` };
 
 const DONT_CLAIM = [
   'We don\'t claim funds are safe. We claim loss is bounded by the limits you set.',

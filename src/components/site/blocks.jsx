@@ -1,11 +1,12 @@
 // Reusable marketing blocks: section, tier strip, layer diagram, threat table, sources, labels.
 import { TierBadge, Simulated } from '../ui';
 import { SOURCES, TIER_COPY, HYPOTHESIS, COMPARE_NOTE } from '../../lib/site';
+import { BRAND } from '@/lib/site';
 
 export function Section({ id, eyebrow, title, children, className = '' }) {
   return (
     <section id={id} className={`py-10 sm:py-14 ${className}`}>
-      {eyebrow && <p className="text-xs font-semibold uppercase tracking-widest text-brand-deep">{eyebrow}</p>}
+      {eyebrow && <p className={`text-xs font-semibold uppercase tracking-widest ${className.includes('dark-band') ? 'text-brand' : 'text-brand-deep'}`}>{eyebrow}</p>}
       {title && <h2 className="mt-2 max-w-3xl text-3xl font-light tracking-tight sm:text-4xl">{title}</h2>}
       <div className="mt-6">{children}</div>
     </section>
@@ -40,14 +41,14 @@ export function TierStrip() {
 
 const LAYERS = [
   { name: 'Agent', desc: 'Any AI. Untrusted. Can only propose.' },
-  { name: 'Bounded', desc: 'Who may spend, and how much. Enforced by the contract.', hl: true },
+  { name: `${BRAND}`, desc: 'Who may spend, and how much. Enforced by the contract.', hl: true },
   { name: 'Wallet', desc: 'The vault holds the funds you own.' },
   { name: 'Rails', desc: 'x402, transfers, DeFi. How money actually moves.' },
 ];
 
 export function LayerDiagram() {
   return (
-    <ol className="grid gap-2 sm:grid-cols-4" aria-label="Layer model: Agent, Bounded, Wallet, Rails">
+    <ol className="grid gap-2 sm:grid-cols-4" aria-label={`Layer model: Agent, ${BRAND}, Wallet, Rails`}>
       {LAYERS.map((l, i) => (
         <li key={l.name} className={`relative rounded-3xl p-5 ${l.hl ? 'glass' : 'card'}`}>
           <div className="text-xs opacity-70">Layer {i + 1}</div>
@@ -65,7 +66,7 @@ export const THREATS = [
   ['Agent key stolen', 'The key can only propose; limits, breaker and owner freeze', 'Loss up to limits before freeze'],
   ['Spam of blocked proposals', 'Breaker freezes the agent; the agent pays gas', 'Owner must unfreeze after false trips'],
   ['Rule-setup manipulation', 'Structured diff signed by the owner; tightening easy, loosening gated', 'A user could still sign a bad policy'],
-  ['Bad trades within limits', 'Not preventable', 'Bounded loss, not perfect AI'],
+  ['Bad trades within limits', 'Not preventable', 'Loss stays bounded; no promise of a perfect AI'],
   ['Frontend tampering', "Safety doesn't depend on the UI; the contract enforces", 'User could be shown a misleading screen'],
   ['Compromised owner wallet', 'Out of scope', 'Owner key is root'],
 ];

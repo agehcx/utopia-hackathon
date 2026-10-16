@@ -17,7 +17,7 @@ const TABS = [
 ];
 
 function Tab({ t, active, count, mobile }) {
-  const base = mobile ? 'flex-1 rounded-2xl py-3 text-[11px] font-medium text-center' : 'rounded-xl px-4 py-2.5 text-sm';
+  const base = mobile ? 'flex min-h-11 flex-1 items-center justify-center rounded-2xl text-[11px] font-medium text-center' : 'rounded-xl px-4 py-2.5 text-sm';
   return (
     <Link href={t.href} aria-current={active ? 'page' : undefined} className={`${base} relative transition ${active ? 'bg-ink text-surface' : 'text-ink/70 hover:bg-ink/5'}`}>
       {t.label}

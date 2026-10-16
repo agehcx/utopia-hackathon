@@ -1,5 +1,6 @@
 import { LayerDiagram, PageTitle, Section, TierStrip } from '../../../components/site/blocks';
 import { TierBadge } from '../../../components/ui';
+import { BRAND } from '@/lib/site';
 
 export const metadata = { title: 'How it works', description: 'Tiers, circuit breaker, receipts, and why the AI has no authority.' };
 
@@ -39,7 +40,7 @@ export default function HowItWorks() {
           <p>Rules are set by you with sliders. Tightening applies instantly. Loosening shows a structured diff and needs your explicit confirmation. An AI may suggest tightening; it can never loosen a rule on its own.</p>
         </div>
       </Section>
-      <Section eyebrow="Layer model" title="Agent, Bounded, Wallet, Rails"><LayerDiagram /></Section>
+      <Section eyebrow="Layer model" title={`Agent, ${BRAND}, Wallet, Rails`}><LayerDiagram /></Section>
     </>
   );
 }

@@ -1,9 +1,10 @@
 import Link from 'next/link';
 import { HypothesisLabel, LayerDiagram, Section, TierStrip } from '../../components/site/blocks';
 import MiniReplay from '../../components/site/MiniReplay';
+import { BRAND } from '@/lib/site';
 
 export const metadata = {
-  title: { absolute: 'Bounded: the spending limit for AI agents' },
+  title: { absolute: `${BRAND}: the spending limit for AI agents` },
   description: 'Give any AI agent access to your funds, with a ceiling you set and a contract that enforces it.',
 };
 
@@ -49,12 +50,12 @@ export default function Home() {
         <MiniReplay />
       </Section>
 
-      <Section eyebrow="Where it fits" title="x402 is how an agent pays. Bounded decides whether it's allowed to."><LayerDiagram /></Section>
+      <Section eyebrow="Where it fits" title={`x402 is how an agent pays. ${BRAND} decides whether it's allowed to.`}><LayerDiagram /></Section>
 
       <Section eyebrow="Who it's for" title="Built for people already running agents with real funds.">
         <div className="grid gap-3 md:grid-cols-3">
           <div className="card"><div className="text-xs text-mute">Primary</div><p className="mt-2">People and teams running AI agents with real funds: trading and DeFi automation, DAOs delegating routine spend.</p></div>
-          <div className="card"><div className="text-xs text-mute">Secondary</div><p className="mt-2">Platforms and agent builders who embed Bounded as a trust layer.</p></div>
+          <div className="card"><div className="text-xs text-mute">Secondary</div><p className="mt-2">Platforms and agent builders who embed {BRAND} as a trust layer.</p></div>
           <div className="card"><div className="text-xs text-mute">Not for</div><p className="mt-2">People content to leave funds on an exchange.</p></div>
         </div>
       </Section>
@@ -64,8 +65,8 @@ export default function Home() {
         <p className="mt-4"><Link href="/pricing" className="underline underline-offset-4">See pricing hypotheses</Link></p>
       </Section>
 
-      <Section className="rounded-[2rem] bg-ink px-6 text-surface sm:px-10" eyebrow="Honest limits" title="We cap losses; we don't promise profits or a smarter AI.">
-        <p className="max-w-2xl opacity-80">Bounded caps losses. It doesn&apos;t promise profits, and it doesn&apos;t make the AI smarter.</p>
+      <Section className="dark-band rounded-[2rem] bg-[#0A0A0A] px-6 text-white sm:px-10" eyebrow="Honest limits" title="We cap losses; we don't promise profits or a smarter AI.">
+        <p className="max-w-2xl opacity-80">{BRAND} caps losses. It doesn&apos;t promise profits, and it doesn&apos;t make the AI smarter.</p>
         <Link href="/app" className="btn btn-brand mt-6">Try the demo</Link>
       </Section>
     </>

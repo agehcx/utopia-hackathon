@@ -5,6 +5,7 @@ import { useVault } from '../store/useVaultStore';
 import { DAY, UNIT, diffPolicy, fmt } from '../lib/engine';
 import { simTime } from '../lib/receipts';
 import { Card, Empty, Simulated } from '../components/ui';
+import { BRAND } from '@/lib/site';
 
 const ADDRESS = /^0x[0-9a-fA-F]{40}$/;
 
@@ -15,7 +16,7 @@ const FIELDS = [
   { key: 'maxVaultPct', label: 'Max % of vault per action', unit: '%', min: 1, max: 100, get: (p) => p.maxVaultPct, set: (v) => ({ maxVaultPct: v }) },
   { key: 'breakerThreshold', label: 'Freeze after N blocks', unit: 'blocks', min: 1, max: 10, get: (p) => p.breakerThreshold, set: (v) => ({ breakerThreshold: v }) },
   { key: 'breakerWindowSec', label: 'Block window', unit: 'sim. min', min: 1, max: 60, get: (p) => p.breakerWindowSec / 60, set: (v) => ({ breakerWindowSec: v * 60 }) },
-  { key: 'maxFeeBps', label: 'Max Bounded fee', unit: 'bps', min: 0, max: 5, get: (p) => p.maxFeeBps, set: (v) => ({ maxFeeBps: v }) },
+  { key: 'maxFeeBps', label: `Max ${BRAND} fee`, unit: 'bps', min: 0, max: 5, get: (p) => p.maxFeeBps, set: (v) => ({ maxFeeBps: v }) },
 ];
 
 const show = (field, v) => {

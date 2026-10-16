@@ -1,9 +1,10 @@
 import { PageTitle, Section } from '../../../components/site/blocks';
+import { BRAND } from '@/lib/site';
 
-export const metadata = { title: 'FAQ', description: 'Questions from judges and users about Bounded.' };
+export const metadata = { title: 'FAQ', description: `Questions from judges and users about ${BRAND}.` };
 
 const FAQ = [
-  ['How is this different from x402?', 'x402 is how an agent pays. Bounded decides whether it\'s allowed to. They work together: the vault can top up an agent\'s x402 wallet in capped increments.'],
+  ['How is this different from x402?', `x402 is how an agent pays. ${BRAND} decides whether it's allowed to. They work together: the vault can top up an agent's x402 wallet in capped increments.`],
   ["Don't x402 wallets already have spending limits?", "Often, yes, usually enforced in the agent's SDK or a service the agent calls. We enforce limits in the contract that holds the funds, and we record every blocked attempt."],
   ['How do you make money?', 'Safety is free. Individuals pay a capped 1–2 bps on executed volume, teams pay for controls, platforms pay per protected agent. These are hypotheses we\'ll test.'],
   ['Do you profit when the agent trades more?', 'Only on executed volume, never on blocked or frozen actions, and you cap the fee in your own rules.'],
