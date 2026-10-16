@@ -5,8 +5,8 @@ import MiniReplay from '../../components/site/MiniReplay';
 import { BRAND } from '@/lib/site';
 
 export const metadata = {
-  title: { absolute: `${BRAND}: the spending limit for AI agents` },
-  description: 'Give any AI agent access to your funds, with a ceiling you set and a contract that enforces it.',
+  title: { absolute: `${BRAND}: a spending firewall for AI agents` },
+  description: `x402 gives agents a way to pay. ${BRAND} gives owners a way to say no. Live on Avalanche Fuji.`,
 };
 
 const STEPS = [
@@ -24,9 +24,9 @@ export default function Home() {
             <span className="inline-flex items-center gap-1.5 rounded-full bg-surface px-3 py-1 ring-1 ring-ink/10"><TokenIcon token="Avalanche" size={14} /> Avalanche Fuji · Testnet</span>
             <span className="rounded-full bg-brand px-3 py-1 text-[#0A0A0A]">Prototype</span>
           </div>
-          <h1 className="mt-6 text-5xl font-light leading-[1.05] tracking-tight sm:text-7xl">The spending limit <span className="text-brand">for AI agents.</span></h1>
+          <h1 className="mt-6 text-5xl font-light leading-[1.05] tracking-tight sm:text-7xl">A spending firewall <span className="text-brand">for AI agents.</span></h1>
           <p className="mt-6 max-w-xl text-lg text-mute">
-            Give any AI agent access to your funds, with a ceiling you set and a contract that enforces it, even when the AI is hacked or wrong.
+            x402 gives agents a way to pay. {BRAND} gives owners a way to say no: a ceiling you set, enforced by a contract, even when the AI is tricked.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link href="/app" className="btn btn-brand">Try the demo</Link>
@@ -38,7 +38,8 @@ export default function Home() {
           <div className="glass absolute inset-x-4 top-8 h-52 -rotate-[2deg] rounded-[2rem] opacity-80" />
           <div className="glass absolute inset-x-8 top-16 h-60 rounded-[2rem] p-6">
             <div className="flex items-center justify-between text-sm font-medium">Agent proposal <Simulated /></div>
-            <p className="mt-5 flex flex-wrap items-center gap-2 text-3xl font-light leading-tight"><TokenIcon size={28} /> Pay 1.5 tUSDC to <b className="font-medium">Sentiment API</b></p>
+            <p className="mt-1 text-xs text-mute">x402-style demo payment (no real x402 facilitator)</p>
+            <p className="mt-4 flex flex-wrap items-center gap-2 text-3xl font-light leading-tight"><TokenIcon size={28} /> Pay 1.5 tUSDC to <b className="font-medium">Sentiment API</b></p>
             <div className="mt-6"><TierBadge tier="AUTO" label="Auto · executed" /></div>
           </div>
           <div className="absolute -bottom-2 left-0 right-6 rounded-3xl bg-surface p-4 shadow-xl ring-1 ring-ink/5">
@@ -79,13 +80,13 @@ export default function Home() {
 
       <Section eyebrow="Who it's for" title="Built for people already running agents with real funds.">
         <div className="grid gap-3 md:grid-cols-3">
-          <div className="card"><div className="text-xs text-mute">Primary</div><p className="mt-2">People and teams running AI agents with real funds: trading and DeFi automation, DAOs delegating routine spend.</p></div>
+          <div className="card"><div className="text-xs text-mute">Primary</div><p className="mt-2">Developers and teams whose agents pay for APIs and data one request at a time (x402-style payments), and anyone giving an agent a capped allowance.</p></div>
           <div className="card"><div className="text-xs text-mute">Secondary</div><p className="mt-2">Platforms and agent builders who embed {BRAND} as a trust layer.</p></div>
           <div className="card"><div className="text-xs text-mute">Not for</div><p className="mt-2">People content to leave funds on an exchange.</p></div>
         </div>
       </Section>
 
-      <Section eyebrow="Pricing" title="Safety is always free. You only pay when money moves.">
+      <Section eyebrow="Pricing" title="The contract is free. Everything else is a hypothesis.">
         <HypothesisLabel />
         <p className="mt-4"><Link href="/pricing" className="underline underline-offset-4">See pricing hypotheses</Link></p>
       </Section>

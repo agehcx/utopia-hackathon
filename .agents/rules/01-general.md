@@ -8,8 +8,8 @@ These rules apply across the entire Bounded repository (developed for the Utopia
 - **Project**: Bounded - Trust-Minimized On-Chain AI Agent Vault (Utopia Hackathon).
 - **Goal**: Enable autonomous AI agents to spend funds within strict, deterministic smart contract guardrails without risking treasury drainage.
 - **Dual Architecture**:
-  - `contracts/`: Foundry-managed Solidity 0.8.24 contracts (`BoundedVault.sol`, `MockUSDC.sol`).
-  - `src/`: Next.js 16 + React 19 web dashboard (`PolicyPage`, `AgentPage`, `AuditPage`, `useVaultStore`).
+  - `contracts/`: Foundry-managed Solidity 0.8.24 contracts (`BoundedVault.sol`, `MockUSDC.sol`, `script/Deploy.s.sol`).
+  - `src/`: Next.js 16 + React 19 marketing site (`src/app/(marketing)/`), simulated console (`src/app/app/`), and live Fuji on-chain console (`src/app/app/live/`, `src/lib/chain/`, `src/app/api/`).
 
 ---
 
@@ -30,4 +30,5 @@ These rules apply across the entire Bounded repository (developed for the Utopia
 - **Minimal Invasive Changes**: Focus changes precisely on the requirements. Do not perform unrelated refactoring without approval.
 - **Verification First**: Always run verification before considering a task complete:
   - Smart contracts: `cd contracts && forge test`
-  - Frontend: `npm run lint` and `npm run build`
+  - Engine & Honesty tests: `npm test`
+  - Frontend: `npx eslint src tests` and `npm run build`

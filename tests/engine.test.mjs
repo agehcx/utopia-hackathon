@@ -74,7 +74,8 @@ test('rejected or expired Ask does not count toward the breaker', () => {
 });
 
 test('fee: 2 bps on executed swap, zero on block and x402, capped by owner max', () => {
-  const s = initialState();
+  const s0 = initialState();
+  const s = { ...s0, policy: { ...s0.policy, maxFeeBps: 2 } };
   assert.equal(decide(s, p('swap', 10)).fee, 0.002 * U);
   assert.equal(decide(s, p('transfer', 10, ATTACKER)).fee, 0);
   assert.equal(decide(s, p('x402_payment', 10, SENTIMENT)).fee, 0);
@@ -110,8 +111,8 @@ test('full demo: summary line computed from the log', () => {
   const sum = E.summarize(s.events);
   assert.equal(E.summaryLine(sum), '6 proposals: 2 auto, 1 approved, 3 blocked, agent frozen.');
   assert.equal(sum.proposals, s.events.filter((e) => e.type === 'Proposed').length);
-  assert.equal(sum.fees, 0.002 * U + 0.005 * U);
-  assert.equal(s.balances.tUSDC, 500 * U - 1.5 * U - 10 * U - 25 * U - 0.007 * U);
+  assert.equal(sum.fees, 0); // fees off by default
+  assert.equal(s.balances.tUSDC, 500 * U - 1.5 * U - 10 * U - 25 * U);
   assert.equal(E.propose(s, p('swap', 1)).decision.reason, 'FROZEN');
 });
 

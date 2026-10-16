@@ -35,9 +35,9 @@ Bounded provides a dual-layer solution:
 - **Owner Invariants**: `withdraw`, `freeze`, `unfreeze`, and `reject` can never be bricked by agent state or policy configuration.
 
 ### 2. Interactive Management & Console UI
-- **Policy Dashboard**: Intuitive interface for the vault owner to adjust per-tx limits, daily caps, expiry dates, allowlists, and emergency freeze controls.
-- **Agent Console**: Conversational workspace for the agent to simulate, classify, and trigger actions with real-time status indicators (`AUTO`, `NEEDS_APPROVAL`, `BLOCKED`).
-- **Audit Log**: Timeline and tabular visualizer indexing all on-chain events (`Proposed`, `Decided`, `Approved`, `Rejected`, `AgentFrozen`, `PolicyUpdated`).
+- **Marketing & Documentation Site (`/`, `/how-it-works`, `/compare`, `/pricing`, `/security`, `/roadmap`, `/faq`)**: Clear explanation of the 4-tier model, threat table, and honest real-vs-simulated comparison.
+- **Simulated Demo Console (`/app`, `/app/rules`, `/app/agent`, `/app/approvals`, `/app/receipts`)**: Offline, resettable console with loosening diff confirmation, strict proposal schema, normal-day and prompt-injection scenarios, and CSV/JSON receipt export.
+- **Live on Fuji Console (`/app/live`)**: Real testnet integration reading deployed `BoundedVault` (`0x2a838F197f877dAE39284aB0Ac26EB156ad638cD`) state via Viem and Routescan, executing server-signed agent proposals (`/api/agent`), and signing owner approvals, freezes, policy renewals, and withdrawals in the browser wallet.
 
 ---
 

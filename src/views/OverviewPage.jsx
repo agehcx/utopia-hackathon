@@ -65,9 +65,6 @@ export default function OverviewPage() {
           <div className="mb-2 text-3xl font-light">{blocks} / {policy.breakerThreshold}</div>
           <Progress value={blocks} max={policy.breakerThreshold} label="Blocks in window vs freeze threshold" />
         </Stat>
-        <Stat title={<span className="flex items-center gap-2">Fee accrued <Simulated>Demo</Simulated></span>} foot={`Max fee you allow: ${policy.maxFeeBps} bps`}>
-          <div className="text-3xl font-light">{fmt(sum.fees)} <span className="text-sm text-mute">tUSDC</span></div>
-        </Stat>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">

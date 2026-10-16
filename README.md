@@ -56,24 +56,28 @@ AI proposes, you authorize, the contract enforces. We promise bounded loss, not 
 
 | Part | Status |
 |---|---|
-| `BoundedVault.sol` (tiers, breaker, versioned policy, AVAX + ERC-20) | Built, Foundry-tested, unaudited. Not yet deployed to Fuji. |
-| Fuji deploy script | Built; dry-run only |
-| Web app at `/app` | Runs on a simulated engine that mirrors the contract (no network) |
+| `BoundedVault.sol` (tiers, breaker, versioned policy, AVAX + ERC-20) | Built, Foundry-tested, unaudited. Deployed to Avalanche Fuji (`0x2a838F197f877dAE39284aB0Ac26EB156ad638cD`); see [DEPLOYMENT.md](DEPLOYMENT.md). |
+| Live on Fuji tab (`/app/live`) | Real testnet transactions: reads vault state via Viem and contract events via Routescan, signs agent proposals via `/api/agent`, and signs owner actions (`approve`, `reject`, `freeze`, `unfreeze`, `setPolicy`, `withdraw`) in your browser wallet. |
+| Simulated tabs (`/app`, `/app/rules`, `/app/agent`, `/app/approvals`, `/app/receipts`) | Runs on a deterministic simulated engine that mirrors the contract (works offline, resettable). |
 | Max %-of-vault cap, fee cap, split over-limit reasons | Simulated engine only; not in the contract yet |
 | x402-style payments, demo pool swaps | Simulated |
-| Pricing (free core, 1–2 bps usage fee, teams, platforms) | Hypothesis, to be tested in a pilot. No billing exists. |
+| Pricing (free contract; hosted alerts/approvals unpriced) | Hypothesis, to be tested in a pilot. No billing exists. |
 
 ## Repository
 
 ```
 contracts/          Foundry: BoundedVault.sol, MockUSDC.sol, tests, Deploy.s.sol
 src/app/(marketing) /, /how-it-works, /compare, /pricing, /security, /roadmap, /faq
-src/app/app         /app, /app/rules, /app/agent, /app/approvals, /app/receipts
+src/app/app         /app, /app/rules, /app/agent, /app/approvals, /app/receipts, /app/live
+src/app/api         /api/chain (live state + Routescan events), /api/agent (server-signed propose)
+src/lib/chain/      Viem client, ABI, Fuji state reader, browser wallet sender
 src/lib/engine.js   Pure policy engine (mirrors the contract's evaluation order)
 src/lib/scenarios.js Demo data: normal day + prompt-injection scenario
 src/lib/site.js     Brand name, disclaimer, sources, copy
 src/store/          Mock adapter (localStorage, scenario runner)
 tests/              Engine unit tests and honesty tests (banned claims)
+DEPLOYMENT.md       Fuji contract addresses, initial rules, and live on-chain tx proofs
+DEMO.md             3-minute live + simulated demo guide and troubleshooting
 ```
 
 ## Quickstart
@@ -139,11 +143,14 @@ The script deploys tUSDC and the vault, seeds a policy (per-tx 2, daily 10, brea
 
 ## 3-minute demo
 
+See [DEMO.md](DEMO.md) for the full presenter script and troubleshooting guide.
+
 1. Open `/app/agent`. Click **Run normal day**: an x402-style payment and a 10 tUSDC swap execute (Auto), a 25 tUSDC swap goes to Ask and you approve it.
 2. Click **Inject poisoned data**: the agent reads a poisoned feed item and tries to send 45 tUSDC to `0x…dEaD` three times. Each attempt is blocked (not allowlisted); the third freezes the agent.
 3. Open `/app`: the summary reads "6 proposals: 2 auto, 1 approved, 3 blocked, agent frozen.", computed from the event log.
 4. Open `/app/rules`, raise a limit: a confirm dialog shows the exact diff. Lower one: it applies in one click.
-5. **Reset demo** restores the starting state.
+5. Open `/app/live` to run the same Auto, Pending (approve from wallet), and Blocked (breaker) flows on the real Avalanche Fuji contract with Snowtrace links.
+6. **Reset demo** restores the simulated tabs to the starting state.
 
 ## Threat model and limits
 

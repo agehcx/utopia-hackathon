@@ -13,7 +13,7 @@ export const DEFAULT_POLICY = {
   breakerThreshold: 3,
   breakerWindowSec: 600,
   expiry: START + 7 * DAY,
-  maxFeeBps: 2,
+  maxFeeBps: 0, // fees dropped from the pitch: contract is free
   allowlist: [
     { label: 'Sentiment API (x402-style)', address: SENTIMENT, kind: 'recipient' },
     { label: 'Demo pool', address: POOL, kind: 'contract' },

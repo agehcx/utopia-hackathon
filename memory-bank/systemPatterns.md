@@ -132,15 +132,26 @@ When an agent proposes an amount exceeding limits for an allowlisted address:
 ```mermaid
 flowchart LR
     Marketing["Marketing pages (/, /how-it-works, /compare, ...)"] --> App["App (/app/*)"]
-    subgraph AppRoutes["App routes"]
+    subgraph SimRoutes["Simulated tabs (offline, resettable)"]
         Overview & Rules & Agent & Approvals & Receipts
     end
-    App --> AppRoutes
-    AppRoutes <--> Store["useVaultStore.jsx (mock adapter, localStorage)"]
+    subgraph LiveRoute["Live on Fuji tab (/app/live)"]
+        LivePage["LivePage.jsx"]
+    end
+    App --> SimRoutes
+    App --> LiveRoute
+    SimRoutes <--> Store["useVaultStore.jsx (mock adapter, localStorage)"]
     Store <--> Engine["engine.js (pure policy engine)"]
     Store <--> Scenarios["scenarios.js (demo data)"]
-    AppRoutes --> ReceiptsLib["receipts.js (event log to rows)"]
+    SimRoutes --> ReceiptsLib["receipts.js (event log to rows)"]
+    LivePage <--> ChainAPI["/api/chain (Viem + Routescan)"]
+    LivePage --> AgentAPI["/api/agent (server-signed propose)"]
+    LivePage --> BrowserWallet["wallet.js (owner sign-off on Fuji)"]
 ```
+
+### Dual-Mode App: Simulated + Live on Fuji
+- **Simulated tabs** (`/app`, `/app/rules`, `/app/agent`, `/app/approvals`, `/app/receipts`): run on `src/lib/engine.js` with `localStorage` persistence so the normal-day and prompt-injection stories work offline and can be reset in one click.
+- **Live on Fuji tab** (`/app/live`, `src/views/LivePage.jsx`): reads real contract state server-side via Viem (`/api/chain`) and contract events via Routescan, triggers real agent proposals via `/api/agent` (keeping `AGENT_PRIVATE_KEY` strictly on the server), and lets the owner sign `approve`, `reject`, `freeze`, `unfreeze`, `setPolicy`, and `withdraw` directly from a browser wallet (`src/lib/chain/wallet.js`).
 
 ### Pure engine, thin UI
 - `src/lib/engine.js` returns new state for every transition and never mutates. The UI only renders its output.

@@ -6,7 +6,10 @@ These rules apply when developing, refactoring, or testing code in `src/` or fro
 
 ## 1. Next.js 16 & React 19 Standards
 - **App Router**: Code resides in `src/app/` using App Router conventions.
-- **Route Separation**: Public landing page resides at `/` (`src/app/page.js`); the full interactive management console resides at `/app` (`src/app/app/page.js`).
+- **Route Separation**:
+  - Marketing pages reside in `src/app/(marketing)/` (`/`, `/how-it-works`, `/compare`, `/pricing`, `/security`, `/roadmap`, `/faq`).
+  - Interactive console tabs reside in `src/app/app/` (`/app`, `/app/rules`, `/app/agent`, `/app/approvals`, `/app/receipts`, `/app/live`).
+  - Server API routes reside in `src/app/api/` (`/api/chain`, `/api/agent`).
 - **Client Components**: Interactive dashboard views and context providers MUST declare `'use client';` at the top of the file.
 - **Breaking Changes in Next.js 16**:
   - Always verify documentation in `node_modules/next/dist/docs/` when unsure of APIs.
@@ -16,7 +19,7 @@ These rules apply when developing, refactoring, or testing code in `src/` or fro
 
 ## 2. React 19 Purity & Hook Rules
 - **No Ref Mutation During Render**:
-  - Do NOT mutate `ref.current` during rendering (e.g. `policyRef.current = policy`).
+  - Do NOT mutate `ref.current` during rendering.
   - Move ref synchronization inside a `useEffect` hook or handle state directly inside event callbacks.
 - **No Impure Function Calls During Render**:
   - Do NOT invoke non-deterministic / impure functions like `Date.now()`, `Math.random()`, or crypto randomizers directly in the component body or inside `useState(Date.now())`.
@@ -24,27 +27,22 @@ These rules apply when developing, refactoring, or testing code in `src/` or fro
 
 ---
 
-## 3. Styling & Design System
-- **Tailwind & Dark Palette**:
-  - Base background is `bg-zinc-950` with card surfaces using `bg-zinc-900` or `bg-zinc-850`, and borders using `border-zinc-800`.
-  - Text colors: High emphasis `text-zinc-100`, medium `text-zinc-300`, muted `text-zinc-500`.
-  - Status accent tokens:
-    - Auto / Success: `text-emerald-500`, `bg-emerald-500/10`
-    - Approval Needed / Warning: `text-amber-500`, `bg-amber-500/10`
-    - Blocked / Danger: `text-rose-500`, `bg-rose-500/10`
-    - Primary Action / Info: `text-violet-500`, `bg-violet-500/10`
-- **Responsive Layout**:
-  - Ensure mobile compatibility using the responsive drawer pattern (`SidebarNav` toggle with hamburger menu in `Topbar`).
+## 3. Styling, Brand & Honesty Rules
+- **Single Brand Constant**:
+  - The project working name (`BRAND`) MUST only appear as a literal in `src/lib/site.js`. All other files in `src/` must import `BRAND` from `src/lib/site.js` (enforced by `tests/honesty.test.mjs`).
+- **Honesty & Banned Claims**:
+  - Never use banned marketing claims (e.g., "100% safe", "fully protected", "principal is safe") in `src/` or `README.md`. Always run `npm test` after copy edits.
+- **Light Theme & Semantic Tokens**:
+  - Always-light theme tokens are defined in `src/app/globals.css` (`--canvas`, `--paper`, `--ink`, `--mute`, `--brand`).
+  - Semantic tier tokens (`auto`, `ask`, `block`, `freeze`) must always render with icon + text + color.
 
 ---
 
-## 4. Contract Alignment & State Management
-- Keep all shared vault state encapsulated in `src/store/useVaultStore.jsx`.
-- **Model BoundedVault Contract Semantics**:
-  - Multi-asset display: Support native AVAX and ERC-20 tokens (e.g. USDC).
-  - Track policy versioning (`policy.version`), expiry, and breaker parameters (`breakerThreshold`, `breakerWindow`, `blockCount`).
-  - Surface circuit breaker trip state (`frozen = true`) with high-visibility alert banners and disabled action execution.
-- **Web3 Readiness**:
-  - Wire wallet connection via Viem / Wagmi v2.
-  - Replace `makeMockHash` with actual on-chain transaction receipt hashes.
-  - Maintain optimistic UI updates and toast feedback for pending -> confirmed transitions.
+## 4. Dual-Mode State Management (Simulated vs Live Fuji)
+- **Simulated Mode (`/app`, `/app/rules`, `/app/agent`, `/app/approvals`, `/app/receipts`)**:
+  - Powered by the pure deterministic engine in `src/lib/engine.js` and `src/store/useVaultStore.jsx` (persisted to `localStorage`).
+  - Keep `src/lib/engine.js` pure and side-effect-free; summary statistics must always be computed from the event log.
+- **Live on Fuji Mode (`/app/live`, `src/views/LivePage.jsx`)**:
+  - Reads live `BoundedVault` and `tUSDC` state on Avalanche Fuji (`43113`) via `/api/chain` (`src/lib/chain/server.js`) and indexes events via Routescan.
+  - Signs agent proposals server-side via `/api/agent` using `AGENT_PRIVATE_KEY` (never expose private keys to the client).
+  - Sends owner actions (`approve`, `reject`, `freeze`, `unfreeze`, `setPolicy`, `withdraw`) via the browser wallet (`src/lib/chain/wallet.js`).

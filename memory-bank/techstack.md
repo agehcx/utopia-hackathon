@@ -38,31 +38,37 @@ This document outlines the complete architectural stack, programming languages, 
 
 | Technology | Version | Purpose |
 | :--- | :--- | :--- |
-| **Next.js** | `16.4.1` | React framework using App Router (`src/app/page.js`, `src/app/app/page.js`). |
+| **Next.js** | `16.4.1` | React framework using App Router (`src/app/(marketing)/`, `src/app/app/`, `src/app/api/`). |
 | **React** | `19.3.0` | UI rendering engine supporting client-side interactivity (`'use client'`). |
-| **Tailwind CSS** | `^3.4.19` | Utility-first styling framework combined with dark theme CSS variables. |
+| **Viem** | `^2.48.0` | Ethereum/Avalanche RPC client, ABI encoding, contract reads, and browser wallet transactions. |
+| **Tailwind CSS** | `^3.4.19` | Utility-first styling framework combined with light theme CSS variables. |
 | **PostCSS & Autoprefixer** | `^8.5.30` / `^10.6.1` | CSS transformations and vendor prefixing. |
 | **ESLint** | `^9.x` | Code quality and linting with Flat Config (`eslint.config.mjs`) and `eslint-config-next`. |
 
 ### UI & Component Layout
 - **Marketing pages (`src/app/(marketing)/`)**: `/`, `/how-it-works`, `/compare`, `/pricing`, `/security`, `/roadmap`, `/faq`, sharing one layout with nav and the footer disclaimer. Reusable blocks (tier strip, layer diagram, threat table, sources) live in `src/components/site/`.
-- **App (`src/app/app/`)**: `/app` (Overview), `/app/rules`, `/app/agent`, `/app/approvals`, `/app/receipts`. `layout.js` wraps every page in `VaultProvider` + `AppShell`.
+- **App (`src/app/app/`)**: `/app` (Overview), `/app/rules`, `/app/agent`, `/app/approvals`, `/app/receipts`, `/app/live` (Live on Fuji). `layout.js` wraps every page in `VaultProvider` + `AppShell`.
+- **Live Chain Integration (`src/lib/chain/` & `src/app/api/`)**:
+  - `src/lib/chain/vault.js`: ABI, Fuji deployment addresses (`src/config/deployments.json`), and shared Viem helpers.
+  - `src/lib/chain/server.js` & `src/app/api/chain/route.js`: Server-side Fuji state reader (`BoundedVault` + `tUSDC`) and Routescan API event fetcher.
+  - `src/app/api/agent/route.js`: Server-signed preset proposals using `AGENT_PRIVATE_KEY` (key never exposed to browser).
+  - `src/lib/chain/wallet.js`: Browser wallet (`window.ethereum`) connector and owner action sender (`approve`, `reject`, `freeze`, `unfreeze`, `setPolicy`, `withdraw`) on Avalanche Fuji (`43113`).
 - **Policy engine (`src/lib/engine.js`)**: pure, deterministic, integer micro-units. Mirrors the contract's evaluation order and adds demo-only rules (max % of vault, fee cap, split over-limit reasons). Unit-tested in `tests/engine.test.mjs`.
 - **Demo data (`src/lib/scenarios.js`)**: starting state, normal-day and injection scenarios, poisoned market feed, simulated clock.
 - **Receipts (`src/lib/receipts.js`)**: event log to readable rows, CSV export.
 - **Site constants (`src/lib/site.js`)**: working name `BRAND` (the only place the name may appear), disclaimer, sources, tier copy, reason text.
-- **Store (`src/store/useVaultStore.jsx`)**: mock adapter. Engine state persisted to localStorage, scenario runner (auto or step-through, speed control), decision animation, aria-live messages. No network, no keys.
-- **Design system**: CSS-variable tokens in `src/app/globals.css` (light + dark via `prefers-color-scheme`), semantic tier colors `auto`, `ask`, `block`, `freeze`. Tier badges always show icon + text + color.
+- **Store (`src/store/useVaultStore.jsx`)**: mock adapter for simulated tabs. Engine state persisted to localStorage, scenario runner (auto or step-through, speed control), decision animation, aria-live messages.
+- **Design system**: Always-light theme CSS-variable tokens in `src/app/globals.css`, orange hero accents, USDC/AVAX token marks, semantic tier colors `auto`, `ask`, `block`, `freeze`. Tier badges always show icon + text + color.
 
 ---
 
-## 3. Web3 & AI Integration (Roadmap Stack)
+## 3. Web3 & AI Integration
 
-| Component | Target Technology | Description |
+| Component | Technology | Status / Description |
 | :--- | :--- | :--- |
-| **Target Network** | Avalanche C-Chain / Fuji Testnet | Fast finality (<1s) and low gas costs ideal for agent micro-transactions and circuit breaker responsiveness. |
-| **Wallet Connector** | `Wagmi v2` + `Viem` | On-chain wallet connection, reading multi-asset balances, and sending contract transactions. |
-| **AI Agent Runtime** | LangChain / ElizaOS / Gemini SDK | Agent reasoning engine capable of proposing payments and interacting via automated RPC calls. |
+| **Target Network** | Avalanche Fuji C-Chain (`43113`) | Live deployed (`BoundedVault`: `0x2a838F197f877dAE39284aB0Ac26EB156ad638cD`, `tUSDC`: `0x3DF940d2402c9db33e48cAd93bD68b38d36B17d5`). |
+| **Chain Client & Wallet** | `Viem` + Browser Wallet + Routescan API | Live in `/app/live` for real testnet proposals, receipts, and owner sign-offs. |
+| **AI Agent Runtime** | Server-signed Presets / Future SDK | Server route `/api/agent` signs proposals on Fuji; roadmap includes x402 top-ups and platform SDK. |
 | **Account Abstraction** | ERC-4337 / Session Keys | Future evolution allowing session keys and modular smart accounts for agent authorization. |
 
 ---

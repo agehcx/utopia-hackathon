@@ -12,7 +12,7 @@ const ROWS = [
   ["Hijacked agent can't skip the check", [['Yes', 'The agent key can only call propose.'], ['No', 'No policy check of its own.'], ['Partial', 'Only if every spend routes through the service.'], ['Yes', 'The exchange enforces sub-account limits.'], ['Yes', 'If the module is configured on every path.'], ['No', 'The agent can sign anything.']]],
   ['Human approval tier', [['Yes', 'Over-limit spends wait for you.'], ['No', ''], ['Varies', 'Product-dependent.'], ['Varies', 'Product-dependent.'], ['Varies', 'Possible with multisig setups.'], ['No', '']]],
   ['Blocked attempts recorded', [['Yes', 'Every block emits an event with a reason.'], ['No', ''], ['Partial', 'Off-chain logs.'], ['Varies', 'Exchange-internal.'], ['Partial', 'Reverted transactions leave little trace.'], ['No', '']]],
-  ['Covers all spending, not only HTTP payments', [['Yes', 'Transfers, swaps and x402 top-ups all come from the vault.'], ['No', 'HTTP payments only.'], ['Partial', 'Focused on x402 payments.'], ['Partial', 'Trading on that exchange only.'], ['Yes', 'Anything the account signs.'], ['No', 'No coverage at all.']]],
+  ['Handles DeFi calls such as swaps', [['No', 'Transfers only today. A DEX router needs selector and calldata rules (roadmap).'], ['No', 'Payments only.'], ['Partial', 'Focused on x402 payments.'], ['Partial', 'Trading on that exchange only.'], ['Yes', 'Anything the account signs.'], ['No', 'No coverage at all.']]],
   ['Easy for non-experts', [['Partial', 'Prototype; sliders and plain-language receipts.'], ['Varies', ''], ['Varies', ''], ['Yes', 'Fully hosted.'], ['No', 'Usually developer tooling.'], ['No', '']]],
 ];
 
@@ -25,7 +25,7 @@ export default function Compare() {
       <PageTitle title={`Where ${BRAND} fits`} sub={`x402 is how an agent pays. ${BRAND} decides whether it's allowed to. They work together.`} />
       <Section><LayerDiagram /></Section>
       <Section eyebrow="Comparison" title="The combination is the point.">
-        <p className="mb-6 max-w-3xl text-mute">On-chain enforcement alone is not unique: smart accounts have it. The difference is the combination: enforcement the agent can&apos;t skip, tiers with human approval, receipts for blocked attempts, an automatic breaker, and coverage of every rail.</p>
+        <p className="mb-6 max-w-3xl text-mute">On-chain enforcement alone is not unique: smart accounts have it. The difference is the combination: enforcement the agent can&apos;t skip, tiers with human approval, receipts for blocked attempts, an automatic breaker, and a public contract not tied to one vendor.</p>
         <div className="hidden overflow-x-auto rounded-3xl bg-surface ring-1 ring-ink/5 lg:block">
           <table className="w-full text-left text-sm">
             <thead className="bg-paper text-xs text-mute"><tr><th className="p-3" />{COLS.map((c) => <th key={c} scope="col" className="p-3 font-medium">{c}</th>)}</tr></thead>
