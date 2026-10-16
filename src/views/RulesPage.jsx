@@ -40,7 +40,7 @@ function NumberBox({ id, value, min, max, unit, onChange }) {
       <input id={id} inputMode="numeric" aria-label={`${unit} value`} className="w-20 rounded-xl bg-paper px-2 py-1.5 text-right ring-1 ring-ink/10 focus:bg-surface focus:outline-none focus:ring-2 focus:ring-brand"
         value={text ?? value} onChange={(e) => setText(e.target.value.replace(/[^0-9]/g, ''))} onBlur={commit}
         onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); if (e.key === 'Escape') { setText(null); e.currentTarget.blur(); } }} />
-      {unit}
+      <span className="w-16 text-left">{unit}</span>
     </span>
   );
 }
