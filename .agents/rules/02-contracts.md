@@ -1,4 +1,4 @@
-# AgentSafe Rules: Smart Contracts (Solidity & Foundry)
+# Bounded Rules: Smart Contracts (Solidity & Foundry)
 
 These rules apply when developing, reviewing, or testing contracts inside `contracts/`.
 

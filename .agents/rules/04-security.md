@@ -1,4 +1,4 @@
-# AgentSafe Rules: Security & Trust Minimization
+# Bounded Rules: Security & Trust Minimization
 
 These rules establish the security invariants that protect user funds and ensure autonomous AI operations remain safe.
 

@@ -1,11 +1,11 @@
-# Project Brief: AgentSafe
+# Project Brief: Bounded
 
 ## Executive Summary
-**AgentSafe** is a trust-minimized, non-custodial smart contract vault and control dashboard created for the **Utopia Hackathon**. It is designed to grant autonomous AI agents financial agency while strictly enforcing deterministic, owner-defined safety guardrails. 
+**Bounded** is a trust-minimized, non-custodial smart contract vault and control dashboard created for the **Utopia Hackathon**. It is designed to grant autonomous AI agents financial agency while strictly enforcing deterministic, owner-defined safety guardrails. 
 
 As autonomous AI agents are entrusted with capital for decentralized operations—such as paying for APIs, purchasing computing power, executing DeFi strategies, or conducting micro-transactions—granting them unconstrained access to private keys or infinite allowances introduces catastrophic failure modes (prompt injection attacks, infinite loops, rogue transactions, and wallet draining). 
 
-AgentSafe solves this by establishing **the smart contract as the sole, unalterable on-chain authority**. The agent cannot move funds directly; it can only `propose`. All transactions are evaluated deterministically on-chain against multi-asset limits, recipient allowlists, and an automated circuit breaker.
+Bounded solves this by establishing **the smart contract as the sole, unalterable on-chain authority**. The agent cannot move funds directly; it can only `propose`. All transactions are evaluated deterministically on-chain against multi-asset limits, recipient allowlists, and an automated circuit breaker.
 
 ---
 
@@ -19,7 +19,7 @@ AgentSafe solves this by establishing **the smart contract as the sole, unaltera
 ---
 
 ## Solution & Value Proposition
-AgentSafe provides a dual-layer solution:
+Bounded provides a dual-layer solution:
 
 ### 1. Deterministic Multi-Asset Smart Contract Vault (`BoundedVault.sol`)
 - **Multi-Asset Support**: Seamlessly manages native AVAX (`address(0)`) and any ERC-20 token (e.g. USDC).

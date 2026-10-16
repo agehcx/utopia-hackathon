@@ -1,6 +1,6 @@
-# System Patterns: AgentSafe
+# System Patterns: Bounded
 
-This document captures the architectural patterns, component relationships, data flows, and design invariants that govern AgentSafe.
+This document captures the architectural patterns, component relationships, data flows, and design invariants that govern Bounded.
 
 ---
 
@@ -131,54 +131,27 @@ When an agent proposes an amount exceeding limits for an allowlisted address:
 
 ```mermaid
 flowchart LR
-    Landing["Landing Page (src/app/page.js) at /"] --> App["Console App (src/app/app/page.js) at /app"]
-
-    subgraph UI["Management Console (/app)"]
-        Header["Header.jsx (Tab Bar)"]
-        Toasts["Toast.jsx (Toasts)"]
-        
-        subgraph Views["Dashboard Views"]
-            Overview["OverviewPage.jsx"]
-            Rules["RulesPage.jsx"]
-            Agent["AgentPage.jsx"]
-            Receipts["ReceiptsPage.jsx"]
-        end
+    Marketing["Marketing pages (/, /how-it-works, /compare, ...)"] --> App["App (/app/*)"]
+    subgraph AppRoutes["App routes"]
+        Overview & Rules & Agent & Approvals & Receipts
     end
-
-    subgraph Store["Central Context (src/store/useVaultStore.jsx)"]
-        State[("Vault State:
-        AVAX/ERC20 balances, policy, allowlist, requests, events")]
-        Commit["Single Write Path:
-        commit(fn) -> ref.current -> setState"]
-        Runner["runInstruction(text) -> interpret -> propose loop"]
-    end
-
-    subgraph Lib["Pure State Machine (src/lib/)"]
-        VaultMachine["vault.js (propose, tripBreaker, approve, reject)"]
-        RuleEngine["rules.js (evaluate -> AUTO | ASK | BLOCKED)"]
-        MockAgent["mockAgent.js (natural language interpreter)"]
-    end
-
-    Header --> Views
-    Views <--> Store
-    Store <--> Lib
-    Store --> Toasts
+    App --> AppRoutes
+    AppRoutes <--> Store["useVaultStore.jsx (mock adapter, localStorage)"]
+    Store <--> Engine["engine.js (pure policy engine)"]
+    Store <--> Scenarios["scenarios.js (demo data)"]
+    AppRoutes --> ReceiptsLib["receipts.js (event log to rows)"]
 ```
 
-### Centralized Store & Single Write Path Pattern
-- `src/store/useVaultStore.jsx` provides a strictly controlled write channel via `commit(fn)`.
-- Updates derive the next state atomically from `ref.current`, avoiding stale closure bugs and preventing React 19 render-time ref mutations.
+### Pure engine, thin UI
+- `src/lib/engine.js` returns new state for every transition and never mutates. The UI only renders its output.
+- Every proposal yields exactly one `Decided` event. Summary numbers are computed from the event log, never hardcoded.
 
-### Pure Functional State Machine Pattern
-- `src/lib/vault.js` and `src/lib/rules.js` provide pure, side-effect-free state transition functions mirroring `BoundedVault.sol` contract logic.
-- Enables complete offline testing and instantaneous UI simulation without network latency or mock contract deployments.
+### No chat with the agent
+- The Agent Console accepts only a strict proposal schema (`action`, `token`, `amount`, `destination`). Unknown fields, bad enums and non-positive amounts are rejected.
+- Untrusted input (the market feed, including a poisoned item) is shown as data the agent reads, never as instructions to the vault.
 
-### Simulation & Intent Classification Engine
-Before executing actions, the client evaluates proposals against the identical decision matrix as the smart contract:
-1. `AUTO`: In-policy payments executed immediately.
-2. `ASK`: Over-limit payments staged as pending requests.
-3. `BLOCKED`: Out-of-policy attempts that trigger the breaker counter.
+### Tighten easy, loosen gated
+- `diffPolicy` / `isLoosening` classify every rule change. Loosening opens a confirm dialog with the full before/after diff; tightening applies in one click. A shorter breaker window counts as loosening.
 
-### Optimistic UI & Toast Notification Pipeline
-- User actions immediately dispatch a `pending` toast with an animated loading spinner.
-- Upon simulated (or real) on-chain receipt confirmation, the toast transitions to `confirmed` and auto-dismisses after a 3.5s timeout.
+### Honesty as a test
+- `tests/honesty.test.mjs` fails on banned claims, on the Bitget user figure without "company-reported", and on the brand name outside `src/lib/site.js`.

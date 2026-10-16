@@ -1,43 +1,17 @@
-# Active Context: AgentSafe (Utopia Hackathon)
+# Active Context: Bounded (Utopia Hackathon)
 
-**Session Date**: October 15, 2026, 16:30  
-**Active Workstream**: BoundedVault Verification & Documentation Alignment
+## Current focus
+The site and app were rebuilt to the "Bounded master revision" spec: spending-limit layer for AI agents, honesty rules enforced by tests, fully offline demo.
 
----
+## Decisions (defaults chosen where the spec was open)
+- Daily limit uses a fixed UTC day (up to ~2x across midnight is a documented edge case).
+- Ask requests auto-reject after 15 simulated minutes; rejections and expiries do not count toward the breaker.
+- x402-style payments carry no fee in the demo; fee = amount × min(2 bps, owner max) on executed swaps and transfers.
+- Max %-of-vault cap is a soft limit (goes to Ask).
+- Approved spends count toward the daily limit; proposals are tUSDC-only; `INSUFFICIENT_BALANCE` kept as an extra block reason to match the contract.
+- Plain-language rule box not built (spec default OFF). Dark mode follows the system setting.
 
-## 1. Recent Progress & Changes
-- **BoundedVault Smart Contract Implemented**:
-  - `BoundedVault.sol` deployed into `contracts/src/`, establishing a multi-asset (native AVAX + ERC-20) guardian vault.
-  - Key architectural additions:
-    - Unified `propose(token, to, amount)` agent interface with automatic `Auto`, `Pending`, or `Blocked` outcomes.
-    - Automated rate-based Circuit Breaker (`breakerThreshold`, `breakerWindow`, `blockCount`, `frozen`).
-    - Atomic policy versioning (`_allowed[version][who]`) preventing stale permissions accumulation.
-    - Fail-safe default (`expiry = 0` on deploy).
-    - Owner sovereignty invariant (`withdraw`, `freeze`, `unfreeze`, `reject` never brickable).
-- **Foundry Invariant Fuzzing Verified**:
-  - 28 out of 28 tests passing cleanly:
-    - 23 unit tests in `contracts/test/BoundedVault.t.sol`.
-    - 5 stateful invariant fuzzing suites in `contracts/test/BoundedVault.invariant.t.sol` (256 runs, 128,000 calls each).
-- **Frontend Architecture Refactored**:
-  - Transitioned from mock cards to a pure functional state machine (`src/lib/vault.js`, `src/lib/rules.js`, `src/lib/mockAgent.js`) directly mirroring `BoundedVault.sol`.
-  - Upgraded views to: `OverviewPage.jsx`, `RulesPage.jsx`, `AgentPage.jsx`, and `ReceiptsPage.jsx`.
-  - Established a warm paper-modern aesthetic using Tailwind custom tokens (`canvas`, `paper`, `ink`, `mute`, `brand`, `good`, `bad`).
-  - Resolved render-time ref mutation warnings via single-write commit path in `useVaultStore.jsx`.
-- **Full Documentation Synchronization**:
-  - `README.md` updated with architecture diagrams, quickstart commands, and feature breakdown.
-  - Complete **Memory Bank** updated (`project_brief.md`, `techstack.md`, `systemPatterns.md`, `current-state.md`, `activeContext.md`).
-  - Specialized rules in `.agents/rules/` (`01-general.md`, `02-contracts.md`, `03-frontend.md`, `04-security.md`) and `AGENTS.md` aligned with `BoundedVault`.
-
----
-
-## 2. Current Focus & Active Decisions
-- **Web3 Integration**: The offline pure state machine in `src/lib/vault.js` is fully functional and demo-ready. Next milestone is providing an optional toggle to switch between Mock mode and Live Avalanche Fuji Testnet via Wagmi v2 / Viem.
-- **ESLint Config**: Add `contracts/**` to `globalIgnores` in `eslint.config.mjs` to keep `npm run lint` pristine.
-
----
-
-## 3. Next Steps Checklist
-- [ ] Add `contracts/**` to `globalIgnores` in `eslint.config.mjs`.
-- [ ] Create Foundry deployment script in `contracts/script/DeployBoundedVault.s.sol`.
-- [ ] Connect Wagmi v2 / Viem provider to connect to deployed Avalanche contracts.
-- [ ] Connect real AI agent API route (e.g. Gemini / LangChain / OpenAI) to replace client-side intent interpreter.
+## Next
+1. Deploy to Fuji with a funded testnet key, then add a wallet-connected chain adapter behind a flag.
+2. Bring the contract in line with the engine (vault-% cap, split reasons) or keep documenting the gap.
+3. Set `metadataBase`, run Lighthouse, keyboard and reduced-motion checks.

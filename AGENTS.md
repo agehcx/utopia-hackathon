@@ -8,9 +8,9 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- END:nextjs-agent-rules -->
 
-# AgentSafe Project Rules
+# Bounded Project Rules
 
-Welcome to AgentSafe! Built for the **Utopia Hackathon**, this repository contains a trust-minimized, on-chain guardian vault for autonomous AI agents (`contracts/`) and an interactive management dashboard (`src/`).
+Welcome to Bounded! Built for the **Utopia Hackathon**, this repository contains a trust-minimized, on-chain guardian vault for autonomous AI agents (`contracts/`) and an interactive management dashboard (`src/`).
 
 ## Quick Navigation & Memory Bank
 - **Project Brief**: [`memory-bank/project_brief.md`](file:///Users/Chega/Desktop/Croissant/Blockchain/Hackathon/Utopia/memory-bank/project_brief.md)

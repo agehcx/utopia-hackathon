@@ -1,11 +1,11 @@
-# AgentSafe Rules: General & Architecture
+# Bounded Rules: General & Architecture
 
-These rules apply across the entire AgentSafe repository (developed for the Utopia Hackathon). All agents operating in this workspace must adhere to these directives.
+These rules apply across the entire Bounded repository (developed for the Utopia Hackathon). All agents operating in this workspace must adhere to these directives.
 
 ---
 
 ## 1. Project Overview & Role
-- **Project**: AgentSafe - Trust-Minimized On-Chain AI Agent Vault (Utopia Hackathon).
+- **Project**: Bounded - Trust-Minimized On-Chain AI Agent Vault (Utopia Hackathon).
 - **Goal**: Enable autonomous AI agents to spend funds within strict, deterministic smart contract guardrails without risking treasury drainage.
 - **Dual Architecture**:
   - `contracts/`: Foundry-managed Solidity 0.8.24 contracts (`BoundedVault.sol`, `MockUSDC.sol`).

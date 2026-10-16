@@ -1,4 +1,4 @@
-# AgentSafe Rules: Frontend & Next.js
+# Bounded Rules: Frontend & Next.js
 
 These rules apply when developing, refactoring, or testing code in `src/` or frontend configuration files.
 

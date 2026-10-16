@@ -1,6 +1,6 @@
-# Technology Stack: AgentSafe
+# Technology Stack: Bounded
 
-This document outlines the complete architectural stack, programming languages, libraries, tooling, and infrastructural choices utilized across AgentSafe (developed for the Utopia Hackathon).
+This document outlines the complete architectural stack, programming languages, libraries, tooling, and infrastructural choices utilized across Bounded (developed for the Utopia Hackathon).
 
 ---
 
@@ -45,21 +45,14 @@ This document outlines the complete architectural stack, programming languages, 
 | **ESLint** | `^9.x` | Code quality and linting with Flat Config (`eslint.config.mjs`) and `eslint-config-next`. |
 
 ### UI & Component Layout
-- **Public Landing Page (`src/app/page.js`)**: Conversion-oriented landing page at `/` with hero, interactive preview teaser, and direct launch link.
-- **Console App Shell (`src/app/app/page.js`)**: Full management dashboard at `/app` with tabbed navigation (`Overview`, `Rules`, `Agent`, `Receipts`).
-- **State Store (`src/store/useVaultStore.jsx`)**: Centralized React Context provider implementing single-write commit path, toast pipeline, and instruction runner.
-- **Pure State Machine & Utilities (`src/lib/`)**:
-  - `src/lib/vault.js`: Pure functional state machine mirroring `BoundedVault.sol` state transitions (`propose`, `tripBreaker`, `approve`, `reject`, `freeze`, `unfreeze`) for offline demonstration.
-  - `src/lib/rules.js`: Policy evaluation engine (`evaluate`), reason codes, address formatters, and tier constants (`AUTO`, `ASK`, `BLOCKED`).
-  - `src/lib/mockAgent.js`: Natural language intent interpreter translating prompt instructions into structured vault proposals.
-- **Views**:
-  - `src/views/OverviewPage.jsx`: Vault summary, live balance, daily spending progress gauge, pending approval cards, and recent receipts.
-  - `src/views/RulesPage.jsx`: Policy configuration (per-tx and daily limits, breaker threshold & window, expiry), labeled allowlist manager, and emergency controls (freeze, unfreeze, revoke).
-  - `src/views/AgentPage.jsx`: Interactive chat interface, proposal simulation with tier badges, suggested queries, and one-click adversarial attack demonstration.
-  - `src/views/ReceiptsPage.jsx`: Immutable receipt ledger with multi-factor filtering (`ALL`, `PAID`, `PENDING`, `BLOCKED`), search, tx hashes, and reason explanations.
-- **Design System (`tailwind.config.js` & `src/app/globals.css`)**:
-  - Warm paper-modern aesthetic: `canvas` (`#E9E9E7`), `paper` (`#F6F6F4`), `ink` (`#0A0A0A`), `mute` (`#8A8A86`), `brand` (`#FF6A1A`), `good` (`#1F9D55`), `bad` (`#E5484D`).
-  - Typography: Outfit sans-serif + Geist mono font stacks.
+- **Marketing pages (`src/app/(marketing)/`)**: `/`, `/how-it-works`, `/compare`, `/pricing`, `/security`, `/roadmap`, `/faq`, sharing one layout with nav and the footer disclaimer. Reusable blocks (tier strip, layer diagram, threat table, sources) live in `src/components/site/`.
+- **App (`src/app/app/`)**: `/app` (Overview), `/app/rules`, `/app/agent`, `/app/approvals`, `/app/receipts`. `layout.js` wraps every page in `VaultProvider` + `AppShell`.
+- **Policy engine (`src/lib/engine.js`)**: pure, deterministic, integer micro-units. Mirrors the contract's evaluation order and adds demo-only rules (max % of vault, fee cap, split over-limit reasons). Unit-tested in `tests/engine.test.mjs`.
+- **Demo data (`src/lib/scenarios.js`)**: starting state, normal-day and injection scenarios, poisoned market feed, simulated clock.
+- **Receipts (`src/lib/receipts.js`)**: event log to readable rows, CSV export.
+- **Site constants (`src/lib/site.js`)**: working name `BRAND` (the only place the name may appear), disclaimer, sources, tier copy, reason text.
+- **Store (`src/store/useVaultStore.jsx`)**: mock adapter. Engine state persisted to localStorage, scenario runner (auto or step-through, speed control), decision animation, aria-live messages. No network, no keys.
+- **Design system**: CSS-variable tokens in `src/app/globals.css` (light + dark via `prefers-color-scheme`), semantic tier colors `auto`, `ask`, `block`, `freeze`. Tier badges always show icon + text + color.
 
 ---
 

@@ -1,22 +1,22 @@
-# AgentSafe 🛡️
+# Bounded
 
-> **Trust-Minimized, On-Chain Financial Guardian Vault for Autonomous AI Agents**  
-> *Built for the **Utopia Hackathon**.*
+> The spending-limit layer for AI agents: a hacked or confused AI has a ceiling on what it can lose.
+> Built for the **Utopia Hackathon** on Avalanche (Fuji testnet). "Bounded" is a working name.
 
-[![Solidity](https://img.shields.io/badge/Solidity-0.8.24-363636?logo=solidity)](https://soliditylang.org/)
-[![Foundry](https://img.shields.io/badge/Foundry-28%20Passing%20(5%20Invariants)-black?logo=ethereum)](https://getfoundry.sh/)
-[![Network](https://img.shields.io/badge/Network-Avalanche%20Fuji%20%7C%20C--Chain-E84142?logo=avalanche)](https://avax.network/)
-[![Next.js](https://img.shields.io/badge/Next.js-16.4.1-black?logo=next.js)](https://nextjs.org/)
-[![React](https://img.shields.io/badge/React-19.3.0-blue?logo=react)](https://react.dev/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4.19-38bdf8?logo=tailwind-css)](https://tailwindcss.com/)
+**Testnet prototype. Not financial advice. Simulated components are labeled. Working name.**
 
----
+## What it is
 
-## 📖 Overview
+Your funds sit in a vault contract. Any AI agent can *propose* a spend, but only inside rules you set. The contract decides:
 
-As autonomous AI agents are entrusted with capital for decentralized operations—such as paying for APIs, purchasing computing power, executing DeFi strategies, or conducting micro-transactions—granting them direct access to private keys or infinite allowances introduces catastrophic failure modes (prompt injection attacks, infinite loops, rogue transactions, and wallet draining).
+| Tier | When | What happens |
+|---|---|---|
+| Auto | Within your limits, approved destination | Executes instantly |
+| Ask | Approved destination, over a limit | Waits for you to approve or reject |
+| Block | Breaks a rule | Nothing moves; the reason is recorded |
+| Circuit breaker | Too many blocks in a short window | The agent is frozen automatically |
 
-**AgentSafe** solves this by establishing **the smart contract as the sole, unalterable on-chain authority**. The agent is granted execution rights that are strictly constrained by owner-configured on-chain rules and automated circuit breakers. The agent cannot move funds directly; it can only `propose`.
+AI proposes, you authorize, the contract enforces. We promise bounded loss, not profits or a smarter AI.
 
 ```
                            +-------------------------+
@@ -52,99 +52,40 @@ As autonomous AI agents are entrusted with capital for decentralized operations�
 
 ---
 
-## ✨ Key Features
+## Real vs simulated
 
-- **Multi-Asset Vault (Native AVAX + ERC-20)**:
-  - Supports native AVAX (`address(0)`) via `receive()` and direct transfer, as well as any ERC-20 token (e.g. USDC) with `SafeERC20`.
-- **Unified Agent Interface (`propose`)**:
-  - The agent interacts exclusively through `propose(token, to, amount)`.
-  - The contract deterministically decides the outcome on-chain:
-    - **`Outcome.Auto`**: Within per-tx and daily limits to an allowlisted address. Immediately executed.
-    - **`Outcome.Pending`**: To an allowlisted address but exceeds per-tx or daily limits. Staged on-chain as a `Request` for owner review.
-    - **`Outcome.Blocked`**: Frozen, expired, not allowlisted, or insufficient balance. Returns cleanly and records to the circuit breaker.
-- **Automated Circuit Breaker**:
-  - Automatically rate-limits policy violations. If `blockCount >= breakerThreshold` within a `breakerWindow` time bucket, the contract automatically freezes the agent (`frozen = true`) and emits `AgentFrozen`.
-- **Atomic Policy Versioning & Allowlisting**:
-  - Policies are versioned (`version++`). Allowlisted addresses are bound to the specific version (`_allowed[version][who]`).
-  - Updating a policy atomically invalidates previous allowlists, preventing stale permissions.
-- **Fail-Safe by Default**:
-  - A fresh vault deploys with `expiry = 0`. All agent proposals are blocked as `Expired` until the owner explicitly sets the initial policy.
-- **Non-Reverting Audit Logging**:
-  - Violations return cleanly and emit `Decided(id, Blocked, reason)` instead of reverting. A revert would roll back state and logs, erasing the audit trail. Non-reverting execution permanently logs attempted breaches in block receipts.
-- **Human-in-the-Loop Escalation**:
-  - Pending requests can be reviewed by the owner and executed via `approve(id)` or dismissed via `reject(id)`.
-  - State transitions (`0: Pending -> 1: Approved / 2: Rejected`) happen *before* fund transfers, eliminating replay vulnerabilities.
-- **Owner Sovereignty**:
-  - `withdraw`, `freeze`, `unfreeze`, and `reject` never depend on agent or policy state. The owner maintains non-custodial capital control at all times.
+| Part | Status |
+|---|---|
+| `BoundedVault.sol` (tiers, breaker, versioned policy, AVAX + ERC-20) | Built, Foundry-tested, unaudited. Not yet deployed to Fuji. |
+| Fuji deploy script | Built; dry-run only |
+| Web app at `/app` | Runs on a simulated engine that mirrors the contract (no network) |
+| Max %-of-vault cap, fee cap, split over-limit reasons | Simulated engine only; not in the contract yet |
+| x402-style payments, demo pool swaps | Simulated |
+| Pricing (free core, 1–2 bps usage fee, teams, platforms) | Hypothesis, to be tested in a pilot. No billing exists. |
 
----
-
-## 📂 Repository Structure
+## Repository
 
 ```
-.
-├── contracts/                        # Smart contract suite (Foundry)
-│   ├── src/
-│   │   ├── BoundedVault.sol          # Multi-token guardian vault with circuit breaker
-│   │   └── MockUSDC.sol              # Test ERC-20 token (6 decimals)
-│   ├── script/
-│   │   └── Deploy.s.sol              # Avalanche Fuji / local deployment script
-│   ├── test/
-│   │   ├── BoundedVault.t.sol        # 23 unit & boundary test suites
-│   │   └── BoundedVault.invariant.t.sol # 5 stateful invariant fuzz tests (128k calls)
-│   └── foundry.toml                  # Foundry config (Solidity 0.8.24, Paris EVM)
-├── src/                              # Next.js 16 frontend application
-│   ├── app/
-│   │   ├── page.js                   # Landing page (hero, value prop, demo teaser)
-│   │   └── app/page.js               # Full vault dashboard console (/app)
-│   ├── components/                   # UI primitives, Header tab bar, Toast notifications
-│   ├── lib/
-│   │   ├── vault.js                  # Pure state machine mirroring BoundedVault
-│   │   ├── rules.js                  # Policy evaluation engine & reason codes
-│   │   └── mockAgent.js              # Natural language prompt interpreter
-│   ├── views/                        # Dashboard views
-│   │   ├── OverviewPage.jsx          # Balance, daily progress gauge, pending requests
-│   │   ├── RulesPage.jsx             # Limits, circuit breaker, allowlist, freeze toggles
-│   │   ├── AgentPage.jsx             # Chat console, proposal previews, attack demo
-│   │   └── ReceiptsPage.jsx          # Comprehensive audit ledger & filterable receipts
-│   └── store/useVaultStore.jsx       # Single-write commit store & instruction runner
-├── memory-bank/                      # Architectural memory bank
-│   ├── project_brief.md              # Mission, problem statement, goals
-│   ├── techstack.md                  # Technology stack, versions, design patterns
-│   ├── systemPatterns.md             # Invariants, component flows, data diagrams
-│   ├── current-state.md              # Real-time project status & test results
-│   └── activeContext.md              # Active sprint context & immediate priorities
-├── .agents/rules/                    # Autonomous agent development rules
-│   ├── 01-general.md                 # Repository conventions & memory bank sync
-│   ├── 02-contracts.md               # Solidity, CEI, non-reverting logging rules
-│   ├── 03-frontend.md                # Next.js 16 & React 19 hook purity rules
-│   └── 04-security.md                # Zero-trust, key safety, human-in-the-loop
-├── .env.example                      # Environment template for testnet deployment
-└── AGENTS.md                         # Agent guidelines & Next.js instruction block
+contracts/          Foundry: BoundedVault.sol, MockUSDC.sol, tests, Deploy.s.sol
+src/app/(marketing) /, /how-it-works, /compare, /pricing, /security, /roadmap, /faq
+src/app/app         /app, /app/rules, /app/agent, /app/approvals, /app/receipts
+src/lib/engine.js   Pure policy engine (mirrors the contract's evaluation order)
+src/lib/scenarios.js Demo data: normal day + prompt-injection scenario
+src/lib/site.js     Brand name, disclaimer, sources, copy
+src/store/          Mock adapter (localStorage, scenario runner)
+tests/              Engine unit tests and honesty tests (banned claims)
 ```
 
----
-
-## 🚀 Quickstart
-
-### Prerequisites
-- [Node.js](https://nodejs.org/) (v18.18+ or v20+)
-- [Foundry](https://getfoundry.sh/) (`forge`, `cast`, `anvil`)
-
-### 1. Smart Contracts & Testing
+## Quickstart
 
 ```bash
-# Navigate to contracts directory
-cd contracts
+npm install
+npm run dev        # http://localhost:3000
+npm test           # engine + honesty tests
+npx eslint src tests
+npm run build
 
-# Run all 28 unit and invariant tests
-forge test
-
-# Run tests with detailed traces
-forge test -vvv
-
-# Format Solidity code
-forge fmt
+cd contracts && forge test   # 23 unit + 5 invariant tests
 ```
 
 #### Test Suite Verification
@@ -186,49 +127,28 @@ Suite result: ok. 5 passed; 0 failed; 0 skipped
 Total: 28 tests passed, 0 failed, 0 skipped
 ```
 
-### 2. Deploying to Avalanche Fuji Testnet
+### Deploy to Fuji
 
 ```bash
-# Copy and configure environment variables
-cp .env.example .env
-# Set PRIVATE_KEY, AGENT_ADDRESS, and AVALANCHE_FUJI_RPC
-
-# Run deployment script (automatically exports to src/config/deployments.json)
+cp .env.example .env   # set PRIVATE_KEY (funded testnet key) and AGENT_ADDRESS
 cd contracts
 forge script script/Deploy.s.sol --rpc-url fuji --broadcast
 ```
 
-### 3. Frontend Web Application
+The script deploys tUSDC and the vault, seeds a policy (per-tx 2, daily 10, breaker 3 per hour, 24h expiry) and writes `src/config/deployments.json`.
 
-```bash
-# Install dependencies from project root
-npm install
+## 3-minute demo
 
-# Start development server
-npm run dev
-```
+1. Open `/app/agent`. Click **Run normal day**: an x402-style payment and a 10 tUSDC swap execute (Auto), a 25 tUSDC swap goes to Ask and you approve it.
+2. Click **Inject poisoned data**: the agent reads a poisoned feed item and tries to send 45 tUSDC to `0x…dEaD` three times. Each attempt is blocked (not allowlisted); the third freezes the agent.
+3. Open `/app`: the summary reads "6 proposals: 2 auto, 1 approved, 3 blocked, agent frozen.", computed from the event log.
+4. Open `/app/rules`, raise a limit: a confirm dialog shows the exact diff. Lower one: it applies in one click.
+5. **Reset demo** restores the starting state.
 
-Open [http://localhost:3000](http://localhost:3000) in your browser:
-- **Landing Page (`/`)**: Product showcase, architecture overview, interactive demo teaser, and direct launch button.
-- **Console App (`/app`)**:
-  - **Overview**: Live vault balance, daily spending progress gauge, pending approval cards, and recent receipts.
-  - **Rules**: Policy controls (per-tx cap, daily limit, circuit breaker threshold & window, expiry), labeled recipient allowlist manager, and emergency controls (freeze, unfreeze, revoke).
-  - **Agent Console**: Interactive chat interface, natural language intent interpreter, live proposal previews (`AUTO`, `ASK`, `BLOCKED`), and one-click adversarial attack demonstration ("Demonstrate prompt injection attempt").
-  - **Receipts Ledger**: Comprehensive audit ledger indexing all events (`PAID`, `PENDING`, `BLOCKED`) with status filtering, address search, tx hashes, and reason explanations.
+## Threat model and limits
 
----
+See `/security` in the app. In short: we assume the agent will be compromised, so the contract, not the AI, is the authority. Losses inside your limits are possible. Known edge cases: daily limits use a fixed UTC day (up to ~2x across midnight), and an AVAX send to a reverting allowlisted contract reverts the whole proposal. The owner wallet is root and out of scope.
 
-## 🔒 Security Invariants
+## License
 
-1. **The Contract is Sole Authority**: The contract never reads oracles or off-chain data. The agent can only `propose`.
-2. **Audit Logging (Non-Reverting Blocks)**: Agent policy breaches in `propose` emit `Decided(id, Blocked, reason)` and increment the circuit breaker rather than reverting, ensuring an indelible on-chain log.
-3. **Automated Circuit Breaker**: Repeated blocked actions automatically freeze the agent to halt adversarial or looping agents.
-4. **CEI & Safe Transfers**: Always adhere to Checks-Effects-Interactions with `ReentrancyGuard` and `SafeERC20`.
-5. **Owner Invariant**: `withdraw`, `freeze`, `unfreeze`, and `reject` can never be bricked by agent state or policy configuration.
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License.
-Built with ❤️ for the **Utopia Hackathon**.
+MIT.
