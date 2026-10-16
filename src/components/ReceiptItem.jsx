@@ -2,7 +2,7 @@
 
 import { fmt } from '../lib/engine';
 import { shortAddr, simTime } from '../lib/receipts';
-import { TierBadge, Simulated } from './ui';
+import { TierBadge, Simulated, TokenIcon } from './ui';
 
 export default function ReceiptItem({ r, compact = false }) {
   return (
@@ -10,7 +10,7 @@ export default function ReceiptItem({ r, compact = false }) {
       <div className="flex flex-wrap items-start gap-3">
         <TierBadge tier={r.tier} />
         <div className="min-w-0 flex-1">
-          <div className="text-sm font-medium">{r.sentence}</div>
+          <div className="flex items-start gap-2 text-sm font-medium">{r.token && <TokenIcon token={r.token} size={18} />}<span>{r.sentence}</span></div>
           <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-mute">
             <span>{simTime(r.ts)}</span>
             {r.to && <span>{r.toLabel} · <span className="font-mono">{shortAddr(r.to)}</span></span>}

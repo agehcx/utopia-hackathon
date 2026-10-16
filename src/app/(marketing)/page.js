@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { HypothesisLabel, LayerDiagram, Section, TierStrip } from '../../components/site/blocks';
+import { Simulated, TierBadge, TokenIcon } from '../../components/ui';
 import MiniReplay from '../../components/site/MiniReplay';
 import { BRAND } from '@/lib/site';
 
@@ -17,14 +18,38 @@ const STEPS = [
 export default function Home() {
   return (
     <>
-      <section className="pt-12 sm:pt-20">
-        <h1 className="max-w-4xl text-5xl font-light leading-[1.05] tracking-tight sm:text-7xl">The spending limit for AI agents.</h1>
-        <p className="mt-6 max-w-2xl text-lg text-mute sm:text-xl">
-          Give any AI agent access to your funds, with a ceiling you set and a contract that enforces it, even when the AI is hacked or wrong.
-        </p>
-        <div className="mt-8 flex flex-wrap gap-3">
-          <Link href="/app" className="btn btn-brand">Try the demo</Link>
-          <Link href="/how-it-works" className="btn btn-ghost">How it works</Link>
+      <section className="mt-4 grid items-center gap-12 rounded-[2rem] bg-paper px-6 py-12 sm:px-10 lg:grid-cols-[1.1fr_1fr] lg:py-16">
+        <div>
+          <div className="flex flex-wrap gap-2 text-[11px] font-semibold uppercase tracking-wide">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-surface px-3 py-1 ring-1 ring-ink/10"><TokenIcon token="Avalanche" size={14} /> Avalanche Fuji · Testnet</span>
+            <span className="rounded-full bg-brand px-3 py-1 text-[#0A0A0A]">Prototype</span>
+          </div>
+          <h1 className="mt-6 text-5xl font-light leading-[1.05] tracking-tight sm:text-7xl">The spending limit <span className="text-brand">for AI agents.</span></h1>
+          <p className="mt-6 max-w-xl text-lg text-mute">
+            Give any AI agent access to your funds, with a ceiling you set and a contract that enforces it, even when the AI is hacked or wrong.
+          </p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link href="/app" className="btn btn-brand">Try the demo</Link>
+            <Link href="/how-it-works" className="btn btn-ghost">How it works</Link>
+          </div>
+        </div>
+        <div className="relative mx-auto h-[26rem] w-full max-w-md" aria-hidden>
+          <div className="glass absolute inset-x-0 top-0 h-52 rotate-[3deg] rounded-[2rem] opacity-60" />
+          <div className="glass absolute inset-x-4 top-8 h-52 -rotate-[2deg] rounded-[2rem] opacity-80" />
+          <div className="glass absolute inset-x-8 top-16 h-60 rounded-[2rem] p-6">
+            <div className="flex items-center justify-between text-sm font-medium">Agent proposal <Simulated /></div>
+            <p className="mt-5 flex flex-wrap items-center gap-2 text-3xl font-light leading-tight"><TokenIcon size={28} /> Pay 1.5 tUSDC to <b className="font-medium">Sentiment API</b></p>
+            <div className="mt-6"><TierBadge tier="AUTO" label="Auto · executed" /></div>
+          </div>
+          <div className="absolute -bottom-2 left-0 right-6 rounded-3xl bg-surface p-4 shadow-xl ring-1 ring-ink/5">
+            <div className="flex items-center gap-3">
+              <TierBadge tier="BLOCK" />
+              <div>
+                <div className="text-sm font-medium">Blocked 45 tUSDC to 0x0000…dEaD</div>
+                <div className="text-xs text-mute">That destination isn&apos;t on your allowlist.</div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

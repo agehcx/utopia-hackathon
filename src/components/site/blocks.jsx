@@ -30,9 +30,9 @@ export function TierStrip() {
   return (
     <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       {TIERS.map(([k, label]) => (
-        <li key={k} className="card">
+        <li key={k} className="glass rounded-[1.75rem] p-6">
           <TierBadge tier={k} label={label} />
-          <p className="mt-3 text-sm leading-relaxed">{TIER_COPY[k]}</p>
+          <p className="mt-8 text-lg font-light leading-snug">{TIER_COPY[k]}</p>
         </li>
       ))}
     </ul>

@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useVault } from '../store/useVaultStore';
 import { simTime } from '../lib/receipts';
 import { DISCLAIMER } from '../lib/site';
-import { Logo, Simulated } from './ui';
+import { Logo, Simulated, TokenIcon } from './ui';
 import Toasts from './Toast';
 
 const TABS = [
@@ -39,6 +39,7 @@ export default function AppShell({ children }) {
             {TABS.map((t) => <Tab key={t.href} t={t} active={path === t.href} count={count(t.href)} />)}
           </nav>
           <div className="flex flex-wrap items-center gap-2">
+            <span className="hidden items-center gap-1.5 rounded-full bg-surface px-3 py-1.5 text-xs font-medium ring-1 ring-ink/10 sm:inline-flex"><TokenIcon token="Avalanche" size={14} /> Fuji testnet</span>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-soft px-3 py-1.5 text-xs font-medium text-brand-deep">
               Demo mode: simulated
             </span>

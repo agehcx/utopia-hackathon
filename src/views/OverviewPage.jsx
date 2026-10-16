@@ -6,7 +6,7 @@ import { useVault } from '../store/useVaultStore';
 import { blocksInWindow, fmt, spentToday, summarize, summaryLine, toUnits } from '../lib/engine';
 import { buildReceipts } from '../lib/receipts';
 import ReceiptItem from '../components/ReceiptItem';
-import { Card, Empty, Progress, Simulated, Skeleton, TierBadge } from '../components/ui';
+import { Card, Empty, Progress, Simulated, Skeleton, TierBadge, TokenIcon } from '../components/ui';
 
 const STATUS = { ACTIVE: ['AUTO', 'Active'], FROZEN: ['FREEZE', 'Frozen'], REVOKED: ['BLOCK', 'Revoked'] };
 
@@ -51,8 +51,8 @@ export default function OverviewPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <Stat title={<span className="flex items-center gap-2">Vault balance <Simulated>Demo</Simulated></span>}>
-          <div className="text-3xl font-light">{fmt(balances.tUSDC)} <span className="text-sm text-mute">tUSDC</span></div>
-          <div className="text-sm text-mute">{fmt(balances.AVAX)} AVAX</div>
+          <div className="flex items-center gap-2 text-3xl font-light"><TokenIcon size={26} />{fmt(balances.tUSDC)} <span className="text-sm text-mute">tUSDC</span></div>
+          <div className="mt-2 flex items-center gap-2 text-sm text-mute"><TokenIcon token="AVAX" size={16} />{fmt(balances.AVAX)} AVAX</div>
         </Stat>
         <Stat title="Agent status" foot={agent === 'FROZEN' ? 'Nothing moves until you unfreeze.' : agent === 'REVOKED' ? 'The key can no longer propose.' : 'Can propose within your rules.'}>
           <TierBadge tier={badge} label={label} />

@@ -99,3 +99,27 @@ export function Skeleton({ rows = 3 }) {
     </div>
   );
 }
+
+// Token / network marks drawn inline (no external images). tUSDC is a test token styled after USDC.
+export function TokenIcon({ token, size = 20 }) {
+  const s = { width: size, height: size };
+  if (token === 'AVAX' || token === 'Avalanche') {
+    return (
+      <svg viewBox="0 0 32 32" style={s} aria-label={token === 'AVAX' ? 'AVAX' : 'Avalanche'} role="img">
+        <circle cx="16" cy="16" r="16" fill="#E84142" />
+        <path d="M20.6 16.9c.5-.9 1.4-.9 1.9 0l3.2 5.6c.5.9.1 1.6-.9 1.6h-6.5c-1 0-1.4-.7-.9-1.6l3.2-5.6zM14.4 6.8c.5-.9 1.3-.9 1.8 0l.7 1.3 1.7 3c.4.8.4 1.7 0 2.5l-5.6 9.7c-.5.8-1.3 1.3-2.2 1.4H6.3c-1 0-1.4-.7-.9-1.6l9-16.3z" fill="#fff" />
+      </svg>
+    );
+  }
+  return (
+    <svg viewBox="0 0 32 32" style={s} aria-label="tUSDC" role="img">
+      <circle cx="16" cy="16" r="16" fill="#2775CA" />
+      <path d="M20.4 18.3c0-2.3-1.4-3.1-4.2-3.4-2-.3-2.4-.8-2.4-1.7s.7-1.5 2-1.5c1.2 0 1.8.4 2.2 1.4.1.2.2.3.4.3h1c.3 0 .5-.2.5-.5-.3-1.4-1.4-2.5-2.9-2.7V8.7c0-.3-.2-.5-.5-.5h-.9c-.3 0-.5.2-.5.5v1.5c-1.9.3-3.1 1.5-3.1 3.1 0 2.2 1.3 3 4.1 3.4 1.9.3 2.4.7 2.4 1.8s-1 1.8-2.3 1.8c-1.8 0-2.4-.8-2.6-1.8-.1-.3-.3-.4-.5-.4h-1c-.3 0-.5.2-.5.5.3 1.6 1.3 2.7 3.4 3v1.5c0 .3.2.5.5.5h.9c.3 0 .5-.2.5-.5v-1.5c1.9-.3 3.2-1.6 3.2-3.3z" fill="#fff" />
+      <path d="M12.9 25.1c-4.9-1.8-7.5-7.2-5.7-12.1 1-2.7 3.1-4.7 5.7-5.7.3-.1.4-.3.4-.6v-.9c0-.2-.1-.4-.4-.5h-.2C6.8 7.3 3.6 13.5 5.4 19.5c1.1 3.5 3.8 6.2 7.3 7.3.3.1.5 0 .6-.3v-1c0-.2-.2-.4-.4-.4zm6.3-19.7c-.3-.1-.5 0-.6.3v1c0 .3.2.5.4.6 4.9 1.8 7.5 7.2 5.7 12.1-1 2.7-3.1 4.7-5.7 5.7-.3.1-.4.3-.4.6v.9c0 .2.1.4.4.5h.2c6-1.9 9.2-8.1 7.3-14.1-1.1-3.5-3.8-6.2-7.3-7.6z" fill="#fff" />
+    </svg>
+  );
+}
+
+export function Amount({ value, token = 'tUSDC', size = 16, className = '' }) {
+  return <span className={`inline-flex items-center gap-1.5 ${className}`}><TokenIcon token={token} size={size} />{value} {token}</span>;
+}

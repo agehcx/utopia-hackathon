@@ -4,7 +4,7 @@ import { useVault } from '../store/useVaultStore';
 import { MIN, fmt } from '../lib/engine';
 import { labelFor, shortAddr } from '../lib/receipts';
 import { REASON_TEXT } from '../lib/site';
-import { Card, Empty, Simulated, Skeleton, TierBadge } from '../components/ui';
+import { Card, Empty, Simulated, Skeleton, TierBadge, TokenIcon } from '../components/ui';
 
 export default function ApprovalsPage() {
   const { state, hydrated, approve, reject, advance } = useVault();
@@ -31,7 +31,7 @@ export default function ApprovalsPage() {
                     <TierBadge tier="ASK" />
                     <span className="text-xs text-mute">{left} min left</span>
                   </div>
-                  <div className="mt-3 text-2xl font-light">{fmt(p.amount)} {p.token}</div>
+                  <div className="mt-3 flex items-center gap-2 text-2xl font-light"><TokenIcon size={24} />{fmt(p.amount)} {p.token}</div>
                   <div className="text-sm">{p.action === 'swap' ? 'Swap via ' : 'To '}{labelFor(p.destination, state.policy.allowlist)} <span className="font-mono text-xs text-mute">{shortAddr(p.destination)}</span></div>
                   <p className="mt-2 text-xs text-mute">Why: {REASON_TEXT[reason]} <span className="font-mono">({reason})</span></p>
                   <div className="mt-4 grid grid-cols-2 gap-2">
