@@ -40,13 +40,16 @@ export default function OverviewPage() {
   const blocks = agent === 'ACTIVE' ? blocksInWindow(state) : 0;
 
   return (
-    <div className="grid gap-4">
+    <div className="grid gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-light tracking-tight sm:text-4xl">Overview</h1>
-          <p className="mt-1 text-sm text-mute">{summaryLine(sum)} <span className="text-xs">(computed from the event log)</span></p>
+          <h1 className="text-3xl font-light tracking-tight sm:text-4xl">Vault Overview</h1>
+          <p className="mt-1 text-sm text-mute">{summaryLine(sum)} <span className="text-xs">(computed from the on-chain event log)</span></p>
         </div>
-        <Link href="/app/agent" className="btn btn-brand">Open Agent Console</Link>
+        <div className="flex items-center gap-2">
+          <Link href="/app/rules" className="btn btn-ghost">Edit Rules</Link>
+          <Link href="/app/agent" className="btn btn-brand">Agent Console</Link>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
@@ -55,27 +58,36 @@ export default function OverviewPage() {
           <div className="mt-2 flex items-center gap-2 text-sm text-mute"><TokenIcon token="AVAX" size={16} />{fmt(balances.AVAX)} AVAX</div>
         </Stat>
         <Stat title="Agent status" foot={agent === 'FROZEN' ? 'Nothing moves until you unfreeze.' : agent === 'REVOKED' ? 'The key can no longer propose.' : 'Can propose within your rules.'}>
-          <TierBadge tier={badge} label={label} />
+          <div className="flex items-center gap-2">
+            <TierBadge tier={badge} label={label} />
+          </div>
         </Stat>
         <Stat title="Today's spend" foot={`of ${fmt(policy.daily)} tUSDC daily limit (simulated UTC day)`}>
           <div className="mb-2 text-3xl font-light">{fmt(spentToday(state))}</div>
           <Progress value={spentToday(state)} max={policy.daily} label="Today's spend vs daily limit" />
         </Stat>
-        <Stat title="Blocks in window" foot={`Freezes at ${policy.breakerThreshold} within ${policy.breakerWindowSec / 60} min`}>
+        <Stat title="Circuit breaker" foot={`Freezes at ${policy.breakerThreshold} blocks in ${policy.breakerWindowSec / 60} min`}>
           <div className="mb-2 text-3xl font-light">{blocks} / {policy.breakerThreshold}</div>
           <Progress value={blocks} max={policy.breakerThreshold} label="Blocks in window vs freeze threshold" />
         </Stat>
+        <Stat title="Active policy" foot={`${policy.allowlist.length} allowlisted destination${policy.allowlist.length === 1 ? '' : 's'}`}>
+          <div className="mb-2 text-3xl font-light">v{policy.version}</div>
+          <div className="flex items-center justify-between text-xs text-mute">
+            <span>Per tx: {fmt(policy.perTx)} tUSDC</span>
+            <Link href="/app/rules" className="font-medium text-brand-deep underline">View rules →</Link>
+          </div>
+        </Stat>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
+      <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
         <Card title="Latest receipts" action={<Link className="text-sm underline underline-offset-4" href="/app/receipts">All receipts</Link>}>
           {!hydrated ? <Skeleton /> : latest.length ? (
             <ul className="grid gap-2">{latest.map((r) => <ReceiptItem key={r.seq} r={r} compact />)}</ul>
           ) : (
-            <Empty title="No activity yet" desc="Run a scenario in the Agent Console to see receipts here." />
+            <Empty title="No activity yet" desc="Submit a proposal or run a scenario in the Agent Console to see receipts here." />
           )}
         </Card>
-        <Card title="Owner controls (never blocked)">
+        <Card title="Owner controls (sovereign, never blocked)">
           <div className="grid gap-3">
             {agent === 'FROZEN'
               ? <button className="btn btn-ink" onClick={unfreeze}>Unfreeze agent</button>
@@ -84,7 +96,7 @@ export default function OverviewPage() {
             {agent === 'REVOKED'
               ? <button className="btn btn-ghost" onClick={restore}>Restore agent key</button>
               : <button className="btn btn-ghost" onClick={revoke}>Revoke agent key</button>}
-            <p className="text-xs text-mute">Withdraw stays enabled even when the agent is frozen.</p>
+            <p className="text-xs text-mute">Non-custodial guarantee: Owner withdraw and freeze always execute directly, independent of agent status.</p>
           </div>
         </Card>
       </div>

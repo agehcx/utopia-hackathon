@@ -134,7 +134,7 @@ export default function LivePage() {
               </button>
             ))}
           </div>
-          <p className="mt-3 text-xs text-mute">Each click is a real Fuji transaction signed by the agent key. Gas is fractions of a cent in test AVAX.</p>
+          <p className="mt-3 text-xs text-mute">Each click is a real Fuji transaction signed on-chain by the agent key. Gas is paid in testnet AVAX.</p>
         </Card>
 
         <Card title="Owner (your wallet)">

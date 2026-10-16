@@ -11,7 +11,8 @@
 ## Decisions (defaults chosen where the spec was open)
 - Daily limit uses a fixed UTC day (up to ~2x across midnight is a documented edge case).
 - Ask requests auto-reject after 15 simulated minutes in the mock engine; rejections and expiries do not count toward the breaker.
-- Contract is free; hosted features (alerts/approvals) are unpriced during pilot; simulated default fee is 0.
+- Contract is free & open-source ($0 for community self-hosting); hosted operator tier uses aligned 2 bps on executed auto-spend ($0 on blocks or idle balances); platform/enterprise tier provides fleet SDK and custom SLAs.
+- Decentralization positioning clarified: unlike custodial CEX trading platforms (e.g., Bitget AI sub-accounts), Bounded is 100% non-custodial with sovereign on-chain EVM enforcement on Avalanche.
 - Max %-of-vault cap is a soft limit (goes to Ask).
 - Approved spends count toward the daily limit; proposals are tUSDC-only in the UI; `INSUFFICIENT_BALANCE` kept as an extra block reason to match the contract.
 - Plain-language rule box not built (spec default OFF). Light theme is always active.
