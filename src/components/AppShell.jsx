@@ -14,6 +14,7 @@ const TABS = [
   { href: '/app/agent', label: 'Agent' },
   { href: '/app/approvals', label: 'Approvals' },
   { href: '/app/receipts', label: 'Receipts' },
+  { href: '/app/live', label: 'Live' },
 ];
 
 function Tab({ t, active, count, mobile }) {
@@ -41,7 +42,7 @@ export default function AppShell({ children }) {
           <div className="flex flex-wrap items-center gap-2">
             <span className="hidden items-center gap-1.5 rounded-full bg-surface px-3 py-1.5 text-xs font-medium ring-1 ring-ink/10 sm:inline-flex"><TokenIcon token="Avalanche" size={14} /> Fuji testnet</span>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-soft px-3 py-1.5 text-xs font-medium text-brand-deep">
-              Demo mode: simulated
+              {path === '/app/live' ? 'Live: real Fuji contract' : 'Demo mode: simulated'}
             </span>
             <span className="hidden font-mono text-xs text-mute sm:inline" title="Simulated clock">{simTime(state.clock)}</span>
             <button onClick={reset} className="btn btn-ghost !min-h-9 !px-3 !py-1.5 text-xs">Reset demo</button>
