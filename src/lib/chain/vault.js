@@ -19,6 +19,7 @@ export const VAULT_ABI = parseAbi([
   'function unfreeze()',
   'function withdraw(address token, uint256 amount)',
   'function setPolicy((uint64 expiry, uint8 breakerThreshold, uint32 breakerWindow, uint32 version) p, address[] list)',
+  'function setLimits(address token, uint256 perTx, uint256 daily)',
   'function agent() view returns (address)',
   'function owner() view returns (address)',
   'function frozen() view returns (bool)',

@@ -41,6 +41,8 @@ export default function LivePage() {
   const [msg, setMsg] = useState('');
   const [owner, setOwner] = useState(null); // { wallet, address }
   const [wd, setWd] = useState('');
+  const [limPerTx, setLimPerTx] = useState('');
+  const [limDaily, setLimDaily] = useState('');
 
   const load = useCallback(async () => {
     try {
@@ -175,6 +177,20 @@ export default function LivePage() {
                 <label className="sr-only" htmlFor="lw">Withdraw tUSDC</label>
                 <input id="lw" className="field" inputMode="decimal" placeholder="tUSDC amount" value={wd} onChange={(e) => setWd(e.target.value)} />
                 <button className="btn btn-ink shrink-0" disabled={Boolean(busy)}>Withdraw</button>
+              </form>
+              <form className="grid grid-cols-[1fr_1fr_auto] gap-2 pt-2 border-t border-ink/5" onSubmit={(e) => {
+                e.preventDefault();
+                const p = Math.round(Number(limPerTx) * 1e6);
+                const d = Math.round(Number(limDaily) * 1e6);
+                if (!(p > 0) || !(d > 0)) return setMsg('Enter valid limits above zero.');
+                ownerTx('limits', 'setLimits', [ADDR.usdc, BigInt(p), BigInt(d)]);
+                setLimPerTx(''); setLimDaily('');
+              }}>
+                <label className="sr-only" htmlFor="lpt">New per-tx limit</label>
+                <input id="lpt" className="field text-xs" inputMode="decimal" placeholder="New per-tx (tUSDC)" value={limPerTx} onChange={(e) => setLimPerTx(e.target.value)} />
+                <label className="sr-only" htmlFor="ldl">New daily limit</label>
+                <input id="ldl" className="field text-xs" inputMode="decimal" placeholder="New daily (tUSDC)" value={limDaily} onChange={(e) => setLimDaily(e.target.value)} />
+                <button className="btn btn-ink shrink-0 text-xs" disabled={Boolean(busy)}>Set Limits</button>
               </form>
             </div>
           )}
